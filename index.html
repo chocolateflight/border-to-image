@@ -282,20 +282,21 @@
 
     downloadBtn.addEventListener('click', () => {
       if (!originalImg) return;
+      const mime = dlFormat.value;           // "image/png" or "image/jpeg"
+      const ext  = mime === 'image/png' ? 'png' : 'jpg';
       const parts = originalName.split('.');
-      const ext = parts.pop();
+      parts.pop();                           // drop original extension
       const base = parts.join('.');
       const filename = `${base}_border.${ext}`;
-      const mime = dlFormat.value;
 
-      // Use Web Share API if widely supported and can share files
+      // iOS/Android: Web Share API
       if (navigator.canShare && navigator.canShare({ files: [] })) {
         canvas.toBlob(blob => {
           const file = new File([blob], filename, { type: mime });
           navigator.share({ files: [file] });
         }, mime);
       } else {
-        // Desktop fallback: synchronous dataURL download
+        // Desktop & others: synchronous dataURL download
         const dataURL = canvas.toDataURL(mime, 1.0);
         const a = document.createElement('a');
         a.href = dataURL;
@@ -310,9 +311,9 @@
       ovNum.value = w;
       scheduleRender({ color: ovColor.value, width: w, ratio: 'orig' });
     }
-    ovWidth.addEventListener('input', () => updateOverlay(parseInt(ovWidth.value,10)));
-    ovColor.addEventListener('input', () => updateOverlay(parseInt(ovNum.value,10)));
-    ovNum.addEventListener('change', () => {
+    ovWidth .addEventListener('input', () => updateOverlay(parseInt(ovWidth .value,10)));
+    ovColor .addEventListener('input', () => updateOverlay(parseInt(ovNum   .value,10)));
+    ovNum   .addEventListener('change', () => {
       let v = parseInt(ovNum.value,10);
       if (isNaN(v) || v<0) v=0;
       ovNum.value = v;
@@ -326,16 +327,17 @@
       cnNum.value = w;
       scheduleRender({ color: cnColor.value, width: w, ratio: ratioSelect.value });
     }
-    cnWidth.addEventListener('input', () => updateCanvas(parseInt(cnWidth.value,10)));
-    cnColor.addEventListener('input', () => updateCanvas(parseInt(cnNum.value,10)));
-    ratioSelect.addEventListener('change', () => updateCanvas(parseInt(cnNum.value,10)));
-    cnNum.addEventListener('change', () => {
+    cnWidth    .addEventListener('input', () => updateCanvas(parseInt(cnWidth   .value,10)));
+    cnColor    .addEventListener('input', () => updateCanvas(parseInt(cnNum     .value,10)));
+    ratioSelect.addEventListener('change', ()   => updateCanvas(parseInt(cnNum     .value,10)));
+    cnNum      .addEventListener('change', ()   => {
       let v = parseInt(cnNum.value,10);
       if (isNaN(v) || v<0) v=0;
       cnNum.value = v;
       if (v <= parseInt(cnWidth.max,10)) cnWidth.value = v;
       updateCanvas(v);
     });
+
   })();
   </script>
 </body>
