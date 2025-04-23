@@ -47,7 +47,9 @@ A live version is hosted at: [https://chocolateflight.github.io/border-to-image/
 ## ⚙️ Structure
 
 ```
-├── index.html       # Single-page app with HTML, CSS, and JS
+├── index.html       # Single-page app HTML
+└── style.css        # CSS code
+└── script.js        # JS
 └── README.md        # This documentation file
 
 
