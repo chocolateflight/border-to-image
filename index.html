@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🖼️ Border-to-Image</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #f9f9f9;
+      color: #333;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    #controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    fieldset {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1rem;
+      background: #fff;
+      margin: 0;
+    }
+    legend {
+      font-weight: bold;
+      padding: 0 0.5rem;
+    }
+    /* Ensure first label in each fieldset has extra bottom margin for separation */
+    fieldset > label:first-of-type {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    input, select, button {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    button {
+      background: #007BFF;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    button:not(:disabled):hover {
+      background: #0056b3;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .valDisplay {
+      margin-left: 0.5em;
+      font-weight: bold;
+    }
+    /* Canvas container background set to a medium grey for clear contrast */
+    #canvasWrapper {
+      background: #ddd;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow: auto;
+      text-align: center;
+    }
+    #photoCanvas {
+      max-width: 100%;
+      max-height: 70vh;
+      width: auto;
+      height: auto;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #btnRow {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Border-to-Image</h1>
+    <div id="controls">
+
+      <fieldset>
+        <legend>Upload &amp; Reset</legend>
+        <label>Photo:
+          <input type="file" id="fileInput" accept="image/*">
+        </label>
+        <div id="btnRow">
+          <button id="resetBtn" disabled>Reset</button>
+          <button id="undoBtn" disabled>Undo</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Overlay Border</legend>
+        <label>Color:
+          <input type="color" id="ovColor" value="#000000" disabled>
+        </label>
+        <label>Width (px):
+          <input type="range" id="ovWidth" min="0" max="200" value="10" disabled>
+          <span class="valDisplay" id="ovVal">10</span>
+        </label>
+        <button id="applyOverlay" disabled>Apply Overlay</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Canvas Border</legend>
+        <label>Color:
+          <input type="color" id="cnColor" value="#ffffff" disabled>
+        </label>
+        <label>Width (px):
+          <input type="range" id="cnWidth" min="0" max="200" value="20" disabled>
+          <span class="valDisplay" id="cnVal">20</span>
+        </label>
+        <label>Ratio:
+          <select id="ratioSelect" disabled>
+            <option value="orig">Keep Current</option>
+            <option value="1:1">1 : 1</option>
+            <option value="4:3">4 : 3</option>
+            <option value="3:2">3 : 2</option>
+            <option value="5:4">5 : 4</option>
+            <option value="4:5">4 : 5</option>
+            <option value="2:3">2 : 3</option>
+            <option value="3:4">3 : 4</option>
+            <option value="16:9">16 : 9</option>
+            <option value="9:16">9 : 16</option>
+          </select>
+        </label>
+        <button id="applyCanvas" disabled>Apply Canvas</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Download</legend>
+        <label>Format:
+          <select id="dlFormat" disabled>
+            <option value="image/png">PNG (lossless)</option>
+            <option value="image/jpeg">JPEG (100%)</option>
+          </select>
+        </label>
+        <button id="downloadBtn" disabled>Download</button>
+      </fieldset>
+
+    </div>
+
+    <div id="canvasWrapper">
+      <canvas id="photoCanvas"></canvas>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    const fileInput   = document.getElementById('fileInput');
+    const resetBtn    = document.getElementById('resetBtn');
+    const undoBtn     = document.getElementById('undoBtn');
+    const applyOverlay= document.getElementById('applyOverlay');
+    const applyCanvas = document.getElementById('applyCanvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const ovColor     = document.getElementById('ovColor');
+    const ovWidth     = document.getElementById('ovWidth');
+    const ovVal       = document.getElementById('ovVal');
+    const cnColor     = document.getElementById('cnColor');
+    const cnWidth     = document.getElementById('cnWidth');
+    const cnVal       = document.getElementById('cnVal');
+    const ratioSelect = document.getElementById('ratioSelect');
+    const dlFormat    = document.getElementById('dlFormat');
+    const canvas      = document.getElementById('photoCanvas');
+    const ctx         = canvas.getContext('2d');
+
+    let originalImg = null;
+    let ops = [];
+
+    function enableControls(on) {
+      [resetBtn, undoBtn, applyOverlay, applyCanvas, downloadBtn,
+       ovColor, ovWidth, cnColor, cnWidth, ratioSelect, dlFormat
+      ].forEach(el => el.disabled = !on);
+    }
+
+    function render(useOps, previewOp = null) {
+      if (!originalImg) return;
+      let temp = document.createElement('canvas');
+      let tctx = temp.getContext('2d');
+      temp.width  = originalImg.width;
+      temp.height = originalImg.height;
+      tctx.drawImage(originalImg,0,0);
+
+      const all = previewOp ? useOps.concat([previewOp]) : useOps.slice();
+
+      all.forEach(o=> {
+        const b = o.width;
+        const c = o.color;
+        let [w,h] = [temp.width, temp.height];
+        let tw = w, th = h;
+        if (o.ratio && o.ratio!=='orig') {
+          const [rw, rh] = o.ratio.split(':').map(Number);
+          const r = rw/rh;
+          if (w/h > r) { tw = w;  th = Math.round(w/r); }
+          else        { th = h;  tw = Math.round(h*r); }
+        }
+        const ncan = document.createElement('canvas');
+        const nctx = ncan.getContext('2d');
+        ncan.width  = tw + b*2;
+        ncan.height = th + b*2;
+        nctx.fillStyle = c;
+        nctx.fillRect(0,0,ncan.width,ncan.height);
+        nctx.drawImage(
+          temp,
+          b + Math.round((tw - w)/2),
+          b + Math.round((th - h)/2)
+        );
+        temp = ncan;
+      });
+
+      canvas.width  = temp.width;
+      canvas.height = temp.height;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(temp,0,0);
+    }
+
+    enableControls(false);
+
+    fileInput.addEventListener('change', e=>{
+      const f = e.target.files[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      const img = new Image();
+      img.onload = () => {
+        originalImg = img;
+        ops = [];
+        render(ops);
+        enableControls(true);
+        undoBtn.disabled = true;
+      };
+      img.src = url;
+    });
+
+    resetBtn.addEventListener('click', () => { ops = []; render(ops); undoBtn.disabled = true; });
+    undoBtn.addEventListener('click', () => { if (!ops.length) return; ops.pop(); render(ops); undoBtn.disabled = ops.length === 0; });
+
+    applyOverlay.addEventListener('click', () => {
+      const w = parseInt(ovWidth.value, 10);
+      ops.push({ type: 'canvas', color: ovColor.value, width: w, ratio: 'orig' });
+      render(ops);
+      undoBtn.disabled = false;
+    });
+
+    applyCanvas.addEventListener('click', () => {
+      const w = parseInt(cnWidth.value, 10);
+      ops.push({ type: 'canvas', color: cnColor.value, width: w, ratio: ratioSelect.value });
+      render(ops);
+      undoBtn.disabled = false;
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const mime = dlFormat.value;
+      const dataURL = canvas.toDataURL(mime, 1.0);
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = 'borderified.' + (mime === 'image/png' ? 'png' : 'jpg');
+      a.click();
+    });
+
+    function previewOverlay() {
+      const w = parseInt(ovWidth.value, 10);
+      ovVal.textContent = w;
+      render(ops, { type: 'canvas', color: ovColor.value, width: w, ratio: 'orig' });
+    }
+    ovWidth.addEventListener('input', previewOverlay);
+    ovColor.addEventListener('input', previewOverlay);
+
+    function previewCanvas() {
+      const w = parseInt(cnWidth.value, 10);
+      cnVal.textContent = w;
+      render(ops, { type: 'canvas', color: cnColor.value, width: w, ratio: ratioSelect.value });
+    }
+    cnWidth.addEventListener('input', previewCanvas);
+    cnColor.addEventListener('input', previewCanvas);
+    ratioSelect.addEventListener('change', previewCanvas);
+  })();
+  </script>
+</body>
+</html>
