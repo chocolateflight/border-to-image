@@ -32,13 +32,11 @@
       border-radius: 4px;
       padding: 1rem;
       background: #fff;
-      margin: 0;
     }
     legend {
       font-weight: bold;
       padding: 0 0.5rem;
     }
-    /* Ensure first label in each fieldset has extra bottom margin for separation */
     fieldset > label:first-of-type {
       margin-bottom: 1rem;
     }
@@ -48,6 +46,12 @@
       margin-top: 0.5rem;
       font-size: 0.9rem;
     }
+    /* group slider + val */
+    .sliderGroup {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
     input, select, button {
       margin-top: 0.5rem;
       padding: 0.5rem;
@@ -55,6 +59,9 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       width: 100%;
+    }
+    input[type="number"] {
+      width: 4em;
     }
     button {
       background: #007BFF;
@@ -73,10 +80,11 @@
       width: 100%;
     }
     .valDisplay {
-      margin-left: 0.5em;
       font-weight: bold;
+      display: inline-block;
+      width: 2em;
+      text-align: center;
     }
-    /* Canvas container background set to a medium grey for clear contrast */
     #canvasWrapper {
       background: #ddd;
       padding: 1rem;
@@ -121,8 +129,11 @@
           <input type="color" id="ovColor" value="#000000" disabled>
         </label>
         <label>Width (px):
-          <input type="range" id="ovWidth" min="0" max="200" value="10" disabled>
-          <span class="valDisplay" id="ovVal">10</span>
+          <div class="sliderGroup">
+            <input type="range" id="ovWidth" min="0" max="200" value="10" disabled>
+            <span class="valDisplay" id="ovVal">10</span>
+          </div>
+          <input type="number" id="ovNum" min="0" max="200" value="10" disabled>
         </label>
         <button id="applyOverlay" disabled>Apply Overlay</button>
       </fieldset>
@@ -133,8 +144,11 @@
           <input type="color" id="cnColor" value="#ffffff" disabled>
         </label>
         <label>Width (px):
-          <input type="range" id="cnWidth" min="0" max="200" value="20" disabled>
-          <span class="valDisplay" id="cnVal">20</span>
+          <div class="sliderGroup">
+            <input type="range" id="cnWidth" min="0" max="200" value="20" disabled>
+            <span class="valDisplay" id="cnVal">20</span>
+          </div>
+          <input type="number" id="cnNum" min="0" max="200" value="20" disabled>
         </label>
         <label>Ratio:
           <select id="ratioSelect" disabled>
@@ -182,9 +196,11 @@
     const ovColor     = document.getElementById('ovColor');
     const ovWidth     = document.getElementById('ovWidth');
     const ovVal       = document.getElementById('ovVal');
+    const ovNum       = document.getElementById('ovNum');
     const cnColor     = document.getElementById('cnColor');
     const cnWidth     = document.getElementById('cnWidth');
     const cnVal       = document.getElementById('cnVal');
+    const cnNum       = document.getElementById('cnNum');
     const ratioSelect = document.getElementById('ratioSelect');
     const dlFormat    = document.getElementById('dlFormat');
     const canvas      = document.getElementById('photoCanvas');
@@ -192,10 +208,11 @@
 
     let originalImg = null;
     let ops = [];
+    let raf = null;
 
     function enableControls(on) {
       [resetBtn, undoBtn, applyOverlay, applyCanvas, downloadBtn,
-       ovColor, ovWidth, cnColor, cnWidth, ratioSelect, dlFormat
+       ovColor, ovWidth, ovNum, cnColor, cnWidth, cnNum, ratioSelect, dlFormat
       ].forEach(el => el.disabled = !on);
     }
 
@@ -205,20 +222,18 @@
       let tctx = temp.getContext('2d');
       temp.width  = originalImg.width;
       temp.height = originalImg.height;
-      tctx.drawImage(originalImg,0,0);
+      tctx.drawImage(originalImg, 0, 0);
 
       const all = previewOp ? useOps.concat([previewOp]) : useOps.slice();
-
-      all.forEach(o=> {
-        const b = o.width;
-        const c = o.color;
+      all.forEach(o => {
+        const b = o.width, c = o.color;
         let [w,h] = [temp.width, temp.height];
         let tw = w, th = h;
         if (o.ratio && o.ratio!=='orig') {
-          const [rw, rh] = o.ratio.split(':').map(Number);
+          const [rw,rh] = o.ratio.split(':').map(Number);
           const r = rw/rh;
-          if (w/h > r) { tw = w;  th = Math.round(w/r); }
-          else        { th = h;  tw = Math.round(h*r); }
+          if (w/h > r) { tw = w; th = Math.round(w/r); }
+          else          { th = h; tw = Math.round(h*r); }
         }
         const ncan = document.createElement('canvas');
         const nctx = ncan.getContext('2d');
@@ -240,9 +255,17 @@
       ctx.drawImage(temp,0,0);
     }
 
+    function scheduleRender(previewOp) {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        render(ops, previewOp);
+        raf = null;
+      });
+    }
+
     enableControls(false);
 
-    fileInput.addEventListener('change', e=>{
+    fileInput.addEventListener('change', e => {
       const f = e.target.files[0];
       if (!f) return;
       const url = URL.createObjectURL(f);
@@ -257,19 +280,28 @@
       img.src = url;
     });
 
-    resetBtn.addEventListener('click', () => { ops = []; render(ops); undoBtn.disabled = true; });
-    undoBtn.addEventListener('click', () => { if (!ops.length) return; ops.pop(); render(ops); undoBtn.disabled = ops.length === 0; });
+    resetBtn.addEventListener('click', () => {
+      ops = [];
+      render(ops);
+      undoBtn.disabled = true;
+    });
+    undoBtn.addEventListener('click', () => {
+      if (!ops.length) return;
+      ops.pop();
+      render(ops);
+      undoBtn.disabled = ops.length === 0;
+    });
 
     applyOverlay.addEventListener('click', () => {
       const w = parseInt(ovWidth.value, 10);
-      ops.push({ type: 'canvas', color: ovColor.value, width: w, ratio: 'orig' });
+      ops.push({ color: ovColor.value, width: w, ratio: 'orig' });
       render(ops);
       undoBtn.disabled = false;
     });
 
     applyCanvas.addEventListener('click', () => {
       const w = parseInt(cnWidth.value, 10);
-      ops.push({ type: 'canvas', color: cnColor.value, width: w, ratio: ratioSelect.value });
+      ops.push({ color: cnColor.value, width: w, ratio: ratioSelect.value });
       render(ops);
       undoBtn.disabled = false;
     });
@@ -283,22 +315,44 @@
       a.click();
     });
 
+    /* Overlay preview */
     function previewOverlay() {
       const w = parseInt(ovWidth.value, 10);
       ovVal.textContent = w;
-      render(ops, { type: 'canvas', color: ovColor.value, width: w, ratio: 'orig' });
+      ovNum.value = w;
+      scheduleRender({ color: ovColor.value, width: w, ratio: 'orig' });
     }
     ovWidth.addEventListener('input', previewOverlay);
     ovColor.addEventListener('input', previewOverlay);
 
+    ovNum.addEventListener('change', () => {
+      let v = parseInt(ovNum.value, 10);
+      if (isNaN(v)) v = 0;
+      v = Math.max(0, Math.min(200, v));
+      ovNum.value = v;
+      ovWidth.value = v;
+      previewOverlay();
+    });
+
+    /* Canvas preview */
     function previewCanvas() {
       const w = parseInt(cnWidth.value, 10);
       cnVal.textContent = w;
-      render(ops, { type: 'canvas', color: cnColor.value, width: w, ratio: ratioSelect.value });
+      cnNum.value = w;
+      scheduleRender({ color: cnColor.value, width: w, ratio: ratioSelect.value });
     }
     cnWidth.addEventListener('input', previewCanvas);
     cnColor.addEventListener('input', previewCanvas);
     ratioSelect.addEventListener('change', previewCanvas);
+
+    cnNum.addEventListener('change', () => {
+      let v = parseInt(cnNum.value, 10);
+      if (isNaN(v)) v = 0;
+      v = Math.max(0, Math.min(200, v));
+      cnNum.value = v;
+      cnWidth.value = v;
+      previewCanvas();
+    });
   })();
   </script>
 </body>
