@@ -1,6 +1,6 @@
 # Border-to-Image
 
-🖼️ **Border-to-Image** (formerly _Borderify_) is a simple, single-page web app that lets you upload an image, add custom borders (overlay or canvas), adjust aspect ratios, and download your edited photo at full resolution. It runs entirely in the browser (no server required) and works seamlessly on desktops and mobile devices.
+🖼️ **Border-to-Image** is a simple, single-page web app that lets you upload an image, add custom borders (overlay or canvas), adjust aspect ratios, and download your edited photo at full resolution. It runs entirely in the browser (no server required) and works seamlessly on desktops and mobile devices.
 
 ---
 
@@ -22,7 +22,7 @@
 
 ## 🌐 Live Demo
 
-A live version is hosted at: [YOUR_GITHUB_PAGES_URL_HERE](<https://USERNAME.github.io/REPO>)
+A live version is hosted at: [https://chocolateflight.github.io/border-to-image/](https://chocolateflight.github.io/border-to-image/)
 
 ---
 
