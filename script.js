@@ -54,8 +54,6 @@
     ];
     elements.forEach(el => { if(el) el.disabled = !on });
     if (fileInput) fileInput.disabled = false; // Keep file input enabled
-    // Only disable toggle when 'on' is explicitly false (e.g. error state)
-    // Enable it when 'on' is true (image loaded) OR initially
     if (advancedModeToggle) advancedModeToggle.disabled = !on;
   }
 
@@ -109,15 +107,12 @@
       const color = op.color;
       const ratio = op.ratio;
 
-      // Dimensions needed *just* for the image + its specific borders
       const borderedWidth = currentImgWidth + pxBorders.left + pxBorders.right;
       const borderedHeight = currentImgHeight + pxBorders.top + pxBorders.bottom;
 
-      // Final canvas dimensions (may be larger due to ratio)
       let finalCanvasWidth = borderedWidth;
       let finalCanvasHeight = borderedHeight;
 
-      // Adjust canvas size for aspect ratio (only for 'outer' borders)
       if (op.type === 'outer' && ratio && ratio !== 'orig') {
         const [rw, rh] = ratio.split(':').map(Number);
         if (rw > 0 && rh > 0) {
@@ -126,7 +121,6 @@
             finalCanvasHeight = rh * k;
         } else {
              console.warn("Invalid ratio provided:", ratio);
-             // Fallback handled by default assignment above
         }
       }
 
@@ -138,22 +132,13 @@
       newCtx.fillStyle = color;
       newCtx.fillRect(0, 0, finalCanvasWidth, finalCanvasHeight);
 
-      // --- CORRECTED DRAW POSITION CALCULATION ---
-      // Calculate extra padding added ONLY by aspect ratio constraints
       const paddingX = finalCanvasWidth - borderedWidth;
       const paddingY = finalCanvasHeight - borderedHeight;
-
-      // Start drawing the image at the left border offset + half the extra horizontal padding
       const drawX = pxBorders.left + Math.round(paddingX / 2);
-
-      // Start drawing the image at the top border offset + half the extra vertical padding
       const drawY = pxBorders.top + Math.round(paddingY / 2);
-      // --- END CORRECTED CALCULATION ---
 
-      // Draw the *previous* canvas content at the calculated position
       newCtx.drawImage(tempCanvas, drawX, drawY);
-
-      tempCanvas = newCanvas; // Update temp canvas for next iteration
+      tempCanvas = newCanvas;
     });
 
     canvas.width = tempCanvas.width;
@@ -164,10 +149,10 @@
 
   // Debounced render for previews
   function scheduleRender(previewOp) {
-    if (raf) return; // Already scheduled
+    if (raf) return;
     raf = requestAnimationFrame(() => {
       render(ops, previewOp);
-      raf = null; // Clear schedule flag
+      raf = null;
     });
   }
 
@@ -185,10 +170,9 @@
       originalImg = img;
       ops = [];
       render(ops);
-      enableControls(true); // Enable controls now that image is loaded
+      enableControls(true);
       undoBtn.disabled = true;
 
-      // Reset units to px and update UI accordingly
       document.querySelectorAll('.unit-btn[data-unit="px"]').forEach(btn => {
           if (!btn.classList.contains('active')) {
               const borderType = btn.dataset.borderType;
@@ -203,10 +187,8 @@
                if(slider) slider.max = "200"; slider.step = "1";
           }
       });
-       // Reset simple slider/number values to default
        innerWidth.value = innerNum.value = "10"; innerVal.textContent = "10";
        outerWidth.value = outerNum.value = "20"; outerVal.textContent = "20";
-       // Reset advanced inputs too? Let's sync them from simple defaults
        innerNumT.value = innerNumB.value = innerNumL.value = innerNumR.value = innerNum.value;
        outerNumT.value = outerNumB.value = outerNumL.value = outerNumR.value = outerNum.value;
     };
@@ -214,8 +196,8 @@
         URL.revokeObjectURL(url);
         alert("Failed to load image.");
         fileInput.value = '';
-        enableControls(false); // Disable controls on failure
-        if (advancedModeToggle) advancedModeToggle.disabled = false; // Ensure toggle remains enabled
+        enableControls(false);
+        if (advancedModeToggle) advancedModeToggle.disabled = false;
     };
     img.src = url;
   });
@@ -240,8 +222,7 @@
   advancedModeToggle.addEventListener('change', () => {
       isAdvancedMode = advancedModeToggle.checked;
       controlsDiv.classList.toggle('advanced-mode-active', isAdvancedMode);
-      // Sync Simple -> Advanced values when switching TO advanced, *if controls are enabled*
-      if (isAdvancedMode && originalImg && !innerNum.disabled) { // Check if image loaded & controls enabled
+      if (isAdvancedMode && originalImg && !innerNum.disabled) {
           innerNumT.value = innerNumB.value = innerNumL.value = innerNumR.value = innerNum.value;
           outerNumT.value = outerNumB.value = outerNumL.value = outerNumR.value = outerNum.value;
       }
@@ -251,7 +232,6 @@
   controlsDiv.addEventListener('click', (e) => {
       if (!e.target.classList.contains('unit-btn')) return;
       const button = e.target;
-      // Ignore clicks on disabled or already active buttons
       if (button.disabled || button.classList.contains('active')) return;
 
       const borderType = button.dataset.borderType;
@@ -270,7 +250,6 @@
       const numInput = document.getElementById(`${borderType}Num`);
       const valDisplay = document.getElementById(`${borderType}Val`);
 
-      // Update slider settings and sync values
       if (slider && numInput && valDisplay) {
           let currentNumVal = parseInt(numInput.value, 10);
           if(isNaN(currentNumVal)) currentNumVal = 0;
@@ -284,7 +263,6 @@
           }
           valDisplay.textContent = slider.value;
       }
-      // Trigger preview only if image exists and controls are enabled
       if (originalImg && !button.disabled) {
           if (borderType === 'inner') updateInnerPreview();
           else if (borderType === 'outer') updateOuterPreview();
@@ -294,7 +272,6 @@
 
   // --- Border Apply Logic ---
   function applyBorder(type) {
-    // Check if controls are enabled (i.e. image loaded) before applying
     if (!originalImg || document.getElementById(`${type}Color`).disabled) {
         alert("Please upload an image first."); return;
     }
@@ -312,7 +289,6 @@
         const width = document.getElementById(`${type}Num`).value;
         op.widthT = op.widthR = op.widthB = op.widthL = width;
     }
-    // Validation
     const parse = (v) => parseInt(v, 10) || 0;
     if (parse(op.widthT) < 0 || parse(op.widthR) < 0 || parse(op.widthB) < 0 || parse(op.widthL) < 0) {
         alert("Border widths cannot be negative."); return;
@@ -327,11 +303,9 @@
 
   // --- Live Preview Logic ---
   function getPreviewOp(type) {
-      // Return null if core elements don't exist (shouldn't happen but safe)
       const colorInput = document.getElementById(`${type}Color`);
       const unitInput = document.getElementById(`${type}Unit`);
       if (!colorInput || !unitInput) return null;
-
       const color = colorInput.value;
       const unit = unitInput.value;
       const ratio = (type === 'outer') ? ratioSelect.value : undefined;
@@ -355,14 +329,11 @@
   }
 
   // --- Input Event Handlers ---
-
-  // Update Inner Preview Trigger
   function updateInnerPreview() {
-      if (!originalImg) return; // Don't preview if no image
+      if (!originalImg) return;
       const op = getPreviewOp('inner');
       if (op) scheduleRender(op);
   }
-  // Update Outer Preview Trigger
   function updateOuterPreview() {
       if (!originalImg) return;
       const op = getPreviewOp('outer');
@@ -371,22 +342,22 @@
 
   // Inner Border Controls
   innerColor.addEventListener('input', updateInnerPreview);
-  innerWidth.addEventListener('input', () => { // Slider Simple
+  innerWidth.addEventListener('input', () => {
       innerVal.textContent = innerWidth.value; innerNum.value = innerWidth.value; updateInnerPreview();
   });
-   innerNum.addEventListener('input', () => { // Number Simple (live update)
+   innerNum.addEventListener('input', () => {
       let v = parseInt(innerNum.value, 10); const sliderMax = parseInt(innerWidth.max, 10);
       if (!isNaN(v)) {
         if (v >= 0 && v <= sliderMax) { innerWidth.value = v; innerVal.textContent = v; }
         else if (v > sliderMax) { innerWidth.value = sliderMax; innerVal.textContent = sliderMax; }
       } updateInnerPreview();
   });
-   innerNum.addEventListener('change', () => { // Number Simple (validation)
+   innerNum.addEventListener('change', () => {
         let v = parseInt(innerNum.value, 10); const sliderMax = parseInt(innerWidth.max, 10);
          if (isNaN(v) || v < 0) v = 0; if (v > sliderMax) v = sliderMax;
          innerNum.value = v; innerWidth.value = v; innerVal.textContent = v; updateInnerPreview();
    });
-  [innerNumT, innerNumR, innerNumB, innerNumL].forEach(input => { // Numbers Advanced
+  [innerNumT, innerNumR, innerNumB, innerNumL].forEach(input => {
       input.addEventListener('input', updateInnerPreview);
       input.addEventListener('change', () => {
             let v = parseInt(input.value, 10); if (isNaN(v) || v < 0) v = 0; input.value = v;
@@ -396,22 +367,22 @@
   // Outer Border Controls
   outerColor.addEventListener('input', updateOuterPreview);
   ratioSelect.addEventListener('change', updateOuterPreview);
-  outerWidth.addEventListener('input', () => { // Slider Simple
+  outerWidth.addEventListener('input', () => {
       outerVal.textContent = outerWidth.value; outerNum.value = outerWidth.value; updateOuterPreview();
   });
-   outerNum.addEventListener('input', () => { // Number Simple (live update)
+   outerNum.addEventListener('input', () => {
       let v = parseInt(outerNum.value, 10); const sliderMax = parseInt(outerWidth.max, 10);
       if (!isNaN(v)) {
         if (v >= 0 && v <= sliderMax) { outerWidth.value = v; outerVal.textContent = v; }
         else if (v > sliderMax) { outerWidth.value = sliderMax; outerVal.textContent = sliderMax; }
       } updateOuterPreview();
   });
-   outerNum.addEventListener('change', () => { // Number Simple (validation)
+   outerNum.addEventListener('change', () => {
         let v = parseInt(outerNum.value, 10); const sliderMax = parseInt(outerWidth.max, 10);
          if (isNaN(v) || v < 0) v = 0; if (v > sliderMax) v = sliderMax;
          outerNum.value = v; outerWidth.value = v; outerVal.textContent = v; updateOuterPreview();
    });
-  [outerNumT, outerNumR, outerNumB, outerNumL].forEach(input => { // Numbers Advanced
+  [outerNumT, outerNumR, outerNumB, outerNumL].forEach(input => {
      input.addEventListener('input', updateOuterPreview);
      input.addEventListener('change', () => {
             let v = parseInt(input.value, 10); if (isNaN(v) || v < 0) v = 0; input.value = v;
@@ -429,24 +400,35 @@
     const nameWithoutExt = originalName.includes('.') ? originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
     const filename = `${nameWithoutExt}_border.${ext}`;
 
+    // Use canvas.toBlob for creating the file
     canvas.toBlob(blob => {
-        if (!blob) { alert("Failed to create image blob for download."); return; }
-        const file = new File([blob], filename, { type: mime });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'Download Image', text: `Image ${filename}` })
-            .then(() => console.log('Share successful'))
-            .catch((error) => { console.log('Share failed or cancelled, falling back to download:', error); downloadFallback(blob, filename); });
-        } else { downloadFallback(blob, filename); }
-    }, mime, 1.0);
+        if (!blob) {
+            alert("Failed to create image blob for download.");
+            return;
+        }
+        // --- CORRECTED: Always use the fallback for direct download attempt ---
+        downloadFallback(blob, filename);
+        // --- Web Share API logic removed ---
+
+    }, mime, 1.0); // Use quality 1.0 for JPEG if format is image/jpeg
   });
 
+  // Fallback function to trigger standard download via link click
   function downloadFallback(blob, filename) {
       const dataURL = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.style.display = 'none'; a.href = dataURL; a.download = filename;
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(dataURL); }, 100);
+      a.style.display = 'none'; // Hide the link
+      a.href = dataURL;
+      a.download = filename;
+      document.body.appendChild(a); // Required for Firefox compatibility
+      a.click();
+      // Cleanup: Use setTimeout to allow download initiation before revoking
+      setTimeout(() => {
+         document.body.removeChild(a);
+         URL.revokeObjectURL(dataURL);
+      }, 100);
   }
+
 
   // --- Initial Setup ---
   enableControls(false); // Disable controls needing an image
