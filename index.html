@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self';">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>🖼️ Border-to-Image</title>
   <link rel="stylesheet" href="style.css">
@@ -19,10 +20,9 @@
          <span class="mode-label">Advanced Mode</span>
     </div>
 
-    <div id="controls">
+    <div id="controls" class="controls-state-container">
 
-      <fieldset>
-        <legend>Upload & Reset</legend>
+      <fieldset id="uploadSection"> <legend>Upload & Reset</legend>
         <label for="fileInput">Photo:</label>
         <input type="file" id="fileInput" accept="image/*">
         <div id="btnRow">
@@ -35,7 +35,6 @@
         <legend>Inner Border</legend>
         <label for="innerColor">Color:</label>
         <input type="color" id="innerColor" value="#000000" disabled>
-
         <div class="width-label-group">
             <label>Width:</label>
             <div class="width-unit-toggle">
@@ -45,7 +44,6 @@
               <input type="hidden" id="innerUnit" value="px">
             </div>
         </div>
-
         <div class="simple-controls">
            <div class="sliderGroup">
               <input type="range" id="innerWidth" min="0" max="200" value="10" disabled aria-label="Inner Border Width Simple">
@@ -53,7 +51,6 @@
             </div>
             <input type="number" id="innerNum" min="0" value="10" disabled aria-label="Inner Border Width Simple Numeric">
         </div>
-
         <div class="advanced-controls">
            <label for="innerNumT">Top (<span class="unit-label">px</span>):</label>
            <input type="number" id="innerNumT" min="0" value="10" disabled>
@@ -64,7 +61,6 @@
            <label for="innerNumL">Left (<span class="unit-label">px</span>):</label>
            <input type="number" id="innerNumL" min="0" value="10" disabled>
         </div>
-
         <button id="applyInner" disabled>Apply Inner Border</button>
       </fieldset>
 
@@ -72,7 +68,6 @@
             <legend>Outer Border</legend>
             <label for="outerColor">Color:</label>
             <input type="color" id="outerColor" value="#ffffff" disabled>
-
             <div class="width-label-group">
                 <label>Width:</label>
                 <div class="width-unit-toggle">
@@ -82,7 +77,6 @@
                     <input type="hidden" id="outerUnit" value="px">
                 </div>
             </div>
-
             <div class="simple-controls">
                 <div class="sliderGroup">
                     <input type="range" id="outerWidth" min="0" max="200" value="20" disabled aria-label="Outer Border Width Simple">
@@ -90,7 +84,6 @@
                 </div>
                 <input type="number" id="outerNum" min="0" value="20" disabled aria-label="Outer Border Width Simple Numeric">
             </div>
-
             <div class="advanced-controls">
                 <label for="outerNumT">Top (<span class="unit-label">px</span>):</label>
                 <input type="number" id="outerNumT" min="0" value="20" disabled>
@@ -101,7 +94,6 @@
                 <label for="outerNumL">Left (<span class="unit-label">px</span>):</label>
                 <input type="number" id="outerNumL" min="0" value="20" disabled>
             </div>
-
             <label for="ratioSelect">Ratio:</label>
             <select id="ratioSelect" disabled>
                 <option value="orig">Keep Current</option>
@@ -118,8 +110,7 @@
             <button id="applyOuter" disabled>Apply Outer Border</button>
       </fieldset>
 
-      <fieldset>
-        <legend>Download</legend>
+      <fieldset id="downloadSection"> <legend>Download</legend>
         <label for="dlFormat">Format:</label>
         <select id="dlFormat" disabled>
           <option value="image/png">PNG (lossless)</option>
@@ -129,14 +120,18 @@
       </fieldset>
 
     </div> <div id="canvasWrapper">
-      <canvas id="photoCanvas"></canvas>
+        <div id="canvas-placeholder">
+            <p>🖼️</p>
+            <p>Upload an image to start editing</p>
+        </div>
+        <canvas id="photoCanvas"></canvas>
     </div>
-
-  </div> <footer>
+    </div> <footer>
     <a href="https://github.com/chocolateflight/border-to-image" target="_blank" rel="noopener noreferrer">
       View Source on GitHub
     </a>
   </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
