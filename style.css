@@ -233,3 +233,25 @@ button:not(:disabled):hover { background: #0056b3; }
   display: block;
   margin: 0 auto;
 }
+
+/* Footer Styles */
+footer {
+  text-align: center;
+  margin-top: 2.5rem; /* Space above the footer */
+  padding: 1.5rem 1rem; /* Padding top/bottom and left/right */
+  border-top: 1px solid #ddd; /* Subtle separator line */
+  width: 100%; /* Ensure it takes full width */
+}
+
+footer a {
+  color: #007BFF; /* Use theme blue color */
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease-in-out;
+}
+
+footer a:hover,
+footer a:focus { /* Added focus style for accessibility */
+  color: #0056b3; /* Darker blue on hover/focus */
+  text-decoration: underline;
+}
