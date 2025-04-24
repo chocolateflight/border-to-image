@@ -20,7 +20,7 @@
          <span class="mode-label">Advanced Mode</span>
     </div>
 
-    <div id="controls" class="controls-state-container">
+    <div id="controls"> 
 
       <fieldset id="uploadSection"> <legend>Upload & Reset</legend>
         <label for="fileInput">Photo:</label>
@@ -28,7 +28,8 @@
         <div id="btnRow">
           <button id="resetBtn" disabled>Reset</button>
           <button id="undoBtn" disabled>Undo</button>
-        </div>
+          <button id="removeBtn" disabled>Remove Image</button>
+          </div>
       </fieldset>
 
       <fieldset id="innerBorderSection">
@@ -126,6 +127,7 @@
         </div>
         <canvas id="photoCanvas"></canvas>
     </div>
+
     </div> <footer>
     <a href="https://github.com/chocolateflight/border-to-image" target="_blank" rel="noopener noreferrer">
       View Source on GitHub

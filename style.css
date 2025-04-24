@@ -1,4 +1,7 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
 body {
   background: #f9f9f9;
   color: #333;
@@ -6,10 +9,12 @@ body {
   margin: 0;
   padding: 1rem;
 }
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 h1 {
   text-align: center;
   margin-bottom: 1rem;
@@ -25,138 +30,334 @@ h1 {
   padding: 0.5rem;
   border-radius: 4px;
 }
-.mode-label { font-size: 0.95rem; color: #555; }
-.toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; }
-.toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .3s; }
-.toggle-slider.round { border-radius: 28px; }
-.toggle-slider.round:before { border-radius: 50%; }
-input:checked + .toggle-slider { background-color: #007BFF; }
-input:checked + .toggle-slider:before { transform: translateX(22px); }
-/* --- End Mode Toggle Switch --- */
+.mode-label {
+  font-size: 0.95rem;
+  color: #555;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+.toggle-switch input {
+  /* Hide default checkbox */
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  /* The visual slider background */
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+}
+.toggle-slider:before {
+  /* The moving part (knob) */
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.3s;
+}
+.toggle-slider.round {
+  border-radius: 28px;
+}
+.toggle-slider.round:before {
+  border-radius: 50%;
+}
 
+/* Colors and movement when checked */
+input:checked + .toggle-slider {
+  background-color: #007bff;
+}
+input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
 
+/* --- Controls --- */
 #controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
+
 fieldset {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 1rem;
   background: #fff;
-  transition: opacity 0.3s ease-in-out; /* Smooth transition */
+  transition: opacity 0.3s ease-in-out;
 }
-legend { font-weight: bold; padding: 0 0.5rem; margin-bottom: 1rem; }
 
-/* Default Label styling */
-label { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; font-weight: bold; }
-
-/* General Input/Select/Button */
-input[type="text"], input[type="number"], input[type="color"], input[type="file"], select, button {
-  display: block; width: 100%; padding: 0.5rem; margin-top: 0.25rem; margin-bottom: 0.75rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px;
+legend {
+  font-weight: bold;
+  padding: 0 0.5rem;
+  margin-bottom: 1rem;
 }
-input[type="color"] { height: 2.5rem; padding: 0.2rem; }
-input[type="number"] { width: 8em; }
-input[type="range"] { width: 100%; margin-top: 0; padding: 0;}
-select { margin-bottom: 1rem; }
 
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
 
-/* Grouping for Width Label + Unit Toggle */
-.width-label-group { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; margin-bottom: 0.5rem; }
-.width-label-group label { margin-bottom: 0; }
-.width-unit-toggle { font-size: 0.9rem; white-space: nowrap; }
-.width-unit-toggle span { margin-right: 0.5em; font-weight: normal; }
-.unit-btn { display: inline-block; width: auto; padding: 0.2rem 0.5rem; font-size: 0.8rem; margin: 0 0.1rem; background-color: #eee; color: #333; border: 1px solid #ccc; cursor: pointer; border-radius: 3px; vertical-align: middle; }
-.unit-btn.active { background-color: #007BFF; color: white; border-color: #0056b3; }
-.unit-btn:not(.active):not(:disabled):hover { background-color: #ddd; } /* Added :not(:disabled) */
+input[type="text"],
+input[type="number"],
+input[type="color"],
+input[type="file"],
+select,
+button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+input[type="color"] {
+  height: 2.5rem;
+  padding: 0.2rem;
+}
+input[type="number"] {
+  width: 8em; /* Default width for number inputs */
+}
+input[type="range"] {
+  width: 100%;
+  margin-top: 0;
+  padding: 0;
+}
+select {
+  margin-bottom: 1rem;
+}
 
+/* --- Width Input Specifics --- */
+.width-label-group {
+  /* Label + Unit Toggle Row */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.width-label-group label {
+  margin-bottom: 0;
+}
 
-/* Simple Controls Layout */
-.simple-controls { margin-bottom: 0.75rem; }
-.sliderGroup { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
-.sliderGroup input[type="range"] { flex-grow: 1; }
-.valDisplay { font-weight: bold; min-width: 2.5em; text-align: center; background-color: #f0f0f0; padding: 0.3rem 0.5rem; border-radius: 3px; font-size: 0.9rem; }
-.simple-controls input[type="number"] { margin-top: 0; }
+.width-unit-toggle {
+  /* Container for px/% buttons */
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.width-unit-toggle span {
+  margin-right: 0.5em;
+  font-weight: normal;
+}
 
-/* Advanced Controls Layout */
-.advanced-controls { display: none; border-top: 1px dashed #ccc; margin-top: 1rem; padding-top: 1rem; grid-template-columns: auto 1fr; gap: 0.6rem 1rem; align-items: center; }
-.advanced-controls label { grid-column: 1 / 2; margin: 0; padding: 0; text-align: right; font-size: 0.9rem; font-weight: normal; }
-.advanced-controls input[type="number"] { grid-column: 2 / 3; width: 100%; margin: 0; margin-bottom: 0; }
+.unit-btn {
+  /* px/% unit toggle buttons */
+  display: inline-block;
+  width: auto;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  margin: 0 0.1rem;
+  background-color: #eee;
+  color: #333;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+/* Active/hover states for unit buttons */
+.unit-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+.unit-btn:not(.active):not(:disabled):hover {
+  background-color: #ddd;
+}
 
-/* Visibility Toggle */
-.advanced-mode-active .simple-controls { display: none; }
-.advanced-mode-active .advanced-controls { display: grid; }
+/* --- Simple Width Controls --- */
+.simple-controls {
+  margin-bottom: 0.75rem;
+}
+.sliderGroup {
+  /* Slider + Value Display Row */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.sliderGroup input[type="range"] {
+  flex-grow: 1;
+}
 
-/* Unit Label Styling */
-.unit-label { font-size: 0.8em; opacity: 0.8; margin-left: 0.2em; }
+.valDisplay {
+  /* Value display next to slider */
+  font-weight: bold;
+  min-width: 2.5em;
+  text-align: center;
+  background-color: #f0f0f0;
+  padding: 0.3rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+.simple-controls input[type="number"] {
+  margin-top: 0;
+}
 
-/* Buttons */
-button { background: #007BFF; color: #fff; cursor: pointer; transition: background 0.2s; margin-top: 1rem; }
-button:disabled { opacity: 0.6; cursor: not-allowed; }
-button:not(:disabled):hover { background: #0056b3; }
-#btnRow { display: flex; gap: 0.5rem; margin-top: 1rem; margin-bottom: 0; }
-#btnRow button { margin-top: 0; }
+/* --- Advanced (Per-Side) Width Controls --- */
+.advanced-controls {
+  display: none; /* Hidden by default */
+  border-top: 1px dashed #ccc;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  grid-template-columns: auto 1fr; /* Label | Input columns */
+  gap: 0.6rem 1rem;
+  align-items: center;
+}
+.advanced-controls label {
+  grid-column: 1 / 2;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+.advanced-controls input[type="number"] {
+  grid-column: 2 / 3;
+  width: 100%;
+  margin: 0;
+}
 
-/* Canvas Area */
+/* --- Simple/Advanced Mode Visibility --- */
+/* Hide simple controls when advanced mode is active */
+.advanced-mode-active .simple-controls {
+  display: none;
+}
+/* Show advanced controls when advanced mode is active */
+.advanced-mode-active .advanced-controls {
+  display: grid;
+}
+
+.unit-label {
+  /* px or % label next to number inputs */
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-left: 0.2em;
+}
+
+/* --- Action Buttons --- */
+button {
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 1rem; /* Default top margin for buttons within fieldsets */
+}
+button:disabled {
+  /* Disabled button appearance */
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+button:not(:disabled):hover {
+  background: #0056b3;
+}
+#btnRow {
+  /* Layout for main action button row (Undo, Reset, etc.) */
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+#btnRow button {
+  margin-top: 0;
+} /* Override default top margin */
+
+/* --- Canvas Area --- */
 #canvasWrapper {
-  background: #eee; /* Lighter background for wrapper */
+  /* Wrapper for canvas and placeholder */
+  background: #eee;
   padding: 1rem;
   border-radius: 4px;
-  overflow: auto;
+  overflow: auto; /* Allow scrolling if canvas is huge */
   text-align: center;
   margin-top: 1.5rem;
-  min-height: 30vh; /* Give it some minimum height */
-  display: flex; /* Use flex to center placeholder */
+  min-height: 30vh;
+  display: flex; /* Used to center placeholder */
   justify-content: center;
   align-items: center;
-  position: relative; /* Needed if canvas is absolutely positioned */
+  position: relative;
 }
 
-/* Canvas Placeholder Styling */
 #canvas-placeholder {
-    color: #888;
-    font-size: 1.1rem;
-    text-align: center;
+  /* Placeholder text shown before image load */
+  color: #888;
+  font-size: 1.1rem;
+  text-align: center;
 }
 #canvas-placeholder p:first-child {
-    font-size: 3rem; /* Larger icon */
-    margin-bottom: 0.5rem;
+  font-size: 3rem; /* Icon size */
+  margin-bottom: 0.5rem;
 }
-/* Hide placeholder when image is loaded */
+/* Hide placeholder when image is loaded via parent class */
 .image-loaded #canvas-placeholder {
-    display: none;
+  display: none;
 }
 
-/* Canvas Styling */
 #photoCanvas {
+  /* Main image display canvas */
   max-width: 100%;
-  max-height: 70vh;
-  width: auto; /* Let image dimensions dictate size */
+  max-height: 70vh; /* Limit max height */
+  width: auto;
   height: auto;
   border: 1px solid #ccc;
   border-radius: 4px;
-  display: none; /* Hide canvas initially */
-  margin: 0 auto;
+  display: none; /* Hidden initially */
+  margin: 0 auto; /* Center if wrapper is wider */
 }
-/* Show canvas when image is loaded */
+/* Show canvas when image is loaded via parent class */
 .image-loaded #photoCanvas {
-    display: block;
+  display: block;
 }
 
-
-/* Footer Styles */
-footer { text-align: center; margin-top: 2.5rem; padding: 1.5rem 1rem; border-top: 1px solid #ddd; width: 100%; }
-footer a { color: #007BFF; text-decoration: none; font-size: 0.9rem; transition: color 0.2s ease-in-out; }
-footer a:hover, footer a:focus { color: #0056b3; text-decoration: underline; }
+/* --- Footer --- */
+footer {
+  text-align: center;
+  margin-top: 2.5rem;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid #ddd;
+  width: 100%;
+}
+footer a {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease-in-out;
+}
+footer a:hover,
+footer a:focus {
+  color: #0056b3;
+  text-decoration: underline;
+}
 
 /* --- Inactive Controls State --- */
-/* Add class .controls-inactive to #controls when no image is loaded */
+/* Dim and disable controls within fieldsets (except upload) when no image via parent class */
 .controls-inactive fieldset:not(#uploadSection) {
-    opacity: 0.5;
-    pointer-events: none; /* Prevent clicks, focus etc. */
-    user-select: none; /* Prevent text selection */
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
 }
