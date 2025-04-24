@@ -9,71 +9,121 @@
 <body>
   <div class="container">
     <h1>🖼️ Border-to-Image</h1>
+
+    <div class="mode-toggle-container">
+         <span class="mode-label">Simple Mode</span>
+         <label class="toggle-switch">
+            <input type="checkbox" id="advancedModeToggle">
+            <span class="toggle-slider round"></span>
+         </label>
+         <span class="mode-label">Advanced Mode</span>
+    </div>
     <div id="controls">
 
       <fieldset>
-        <legend>Upload &amp; Reset</legend>
-        <label>Photo:
-          <input type="file" id="fileInput" accept="image/*">
-        </label>
+        <legend>Upload & Reset</legend>
+        <label for="fileInput">Photo:</label>
+        <input type="file" id="fileInput" accept="image/*">
         <div id="btnRow">
           <button id="resetBtn" disabled>Reset</button>
           <button id="undoBtn" disabled>Undo</button>
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>Overlay Border</legend>
-        <label>Color:
-          <input type="color" id="ovColor" value="#000000" disabled>
-        </label>
-        <label>Width (px):
-          <div class="sliderGroup">
-            <input type="range" id="ovWidth" min="0" max="200" value="10" disabled>
-            <span class="valDisplay" id="ovVal">10</span>
-          </div>
-          <input type="number" id="ovNum" min="0" value="10" disabled>
-        </label>
-        <button id="applyOverlay" disabled>Apply Overlay</button>
+      <fieldset id="innerBorderSection">
+        <legend>Inner Border</legend>
+        <label for="innerColor">Color:</label>
+        <input type="color" id="innerColor" value="#000000" disabled>
+
+        <div class="width-label-group">
+            <label>Width:</label>
+            <div class="width-unit-toggle">
+              <span>Unit:</span>
+              <button class="unit-btn active" data-border-type="inner" data-unit="px">px</button>
+              <button class="unit-btn" data-border-type="inner" data-unit="%">%</button>
+              <input type="hidden" id="innerUnit" value="px">
+            </div>
+        </div>
+
+        <div class="simple-controls">
+           <div class="sliderGroup">
+              <input type="range" id="innerWidth" min="0" max="200" value="10" disabled aria-label="Inner Border Width Simple">
+              <span class="valDisplay" id="innerVal">10</span>
+            </div>
+            <input type="number" id="innerNum" min="0" value="10" disabled aria-label="Inner Border Width Simple Numeric">
+        </div>
+
+        <div class="advanced-controls">
+           <label for="innerNumT">Top (<span class="unit-label">px</span>):</label>
+           <input type="number" id="innerNumT" min="0" value="10" disabled>
+           <label for="innerNumR">Right (<span class="unit-label">px</span>):</label>
+           <input type="number" id="innerNumR" min="0" value="10" disabled>
+           <label for="innerNumB">Bottom (<span class="unit-label">px</span>):</label>
+           <input type="number" id="innerNumB" min="0" value="10" disabled>
+           <label for="innerNumL">Left (<span class="unit-label">px</span>):</label>
+           <input type="number" id="innerNumL" min="0" value="10" disabled>
+        </div>
+
+        <button id="applyInner" disabled>Apply Inner Border</button>
       </fieldset>
 
-      <fieldset>
-        <legend>Canvas Border</legend>
-        <label>Color:
-          <input type="color" id="cnColor" value="#ffffff" disabled>
-        </label>
-        <label>Width (px):
-          <div class="sliderGroup">
-            <input type="range" id="cnWidth" min="0" max="200" value="20" disabled>
-            <span class="valDisplay" id="cnVal">20</span>
-          </div>
-          <input type="number" id="cnNum" min="0" value="20" disabled>
-        </label>
-        <label>Ratio:
-          <select id="ratioSelect" disabled>
-            <option value="orig">Keep Current</option>
-            <option value="1:1">1 : 1</option>
-            <option value="4:3">4 : 3</option>
-            <option value="3:2">3 : 2</option>
-            <option value="5:4">5 : 4</option>
-            <option value="4:5">4 : 5</option>
-            <option value="2:3">2 : 3</option>
-            <option value="3:4">3 : 4</option>
-            <option value="16:9">16 : 9</option>
-            <option value="9:16">9 : 16</option>
-          </select>
-        </label>
-        <button id="applyCanvas" disabled>Apply Canvas</button>
+      <fieldset id="outerBorderSection">
+            <legend>Outer Border</legend>
+            <label for="outerColor">Color:</label>
+            <input type="color" id="outerColor" value="#ffffff" disabled>
+
+            <div class="width-label-group">
+                <label>Width:</label>
+                <div class="width-unit-toggle">
+                    <span>Unit:</span>
+                    <button class="unit-btn active" data-border-type="outer" data-unit="px">px</button>
+                    <button class="unit-btn" data-border-type="outer" data-unit="%">%</button>
+                    <input type="hidden" id="outerUnit" value="px">
+                </div>
+            </div>
+
+            <div class="simple-controls">
+                <div class="sliderGroup">
+                    <input type="range" id="outerWidth" min="0" max="200" value="20" disabled aria-label="Outer Border Width Simple">
+                    <span class="valDisplay" id="outerVal">20</span>
+                </div>
+                <input type="number" id="outerNum" min="0" value="20" disabled aria-label="Outer Border Width Simple Numeric">
+            </div>
+
+            <div class="advanced-controls">
+                <label for="outerNumT">Top (<span class="unit-label">px</span>):</label>
+                <input type="number" id="outerNumT" min="0" value="20" disabled>
+                <label for="outerNumR">Right (<span class="unit-label">px</span>):</label>
+                <input type="number" id="outerNumR" min="0" value="20" disabled>
+                <label for="outerNumB">Bottom (<span class="unit-label">px</span>):</label>
+                <input type="number" id="outerNumB" min="0" value="20" disabled>
+                <label for="outerNumL">Left (<span class="unit-label">px</span>):</label>
+                <input type="number" id="outerNumL" min="0" value="20" disabled>
+            </div>
+
+            <label for="ratioSelect">Ratio:</label>
+            <select id="ratioSelect" disabled>
+                <option value="orig">Keep Current</option>
+                <option value="1:1">1&thinsp;:&thinsp;1</option>
+                <option value="4:3">4&thinsp;:&thinsp;3</option>
+                <option value="3:2">3&thinsp;:&thinsp;2</option>
+                <option value="5:4">5&thinsp;:&thinsp;4</option>
+                <option value="4:5">4&thinsp;:&thinsp;5</option>
+                <option value="2:3">2&thinsp;:&thinsp;3</option>
+                <option value="3:4">3&thinsp;:&thinsp;4</option>
+                <option value="16:9">16&thinsp;:&thinsp;9</option>
+                <option value="9:16">9&thinsp;:&thinsp;16</option>
+            </select>
+            <button id="applyOuter" disabled>Apply Outer Border</button>
       </fieldset>
 
       <fieldset>
         <legend>Download</legend>
-        <label>Format:
-          <select id="dlFormat" disabled>
-            <option value="image/png">PNG (lossless)</option>
-            <option value="image/jpeg">JPEG (100%)</option>
-          </select>
-        </label>
+        <label for="dlFormat">Format:</label>
+        <select id="dlFormat" disabled>
+          <option value="image/png">PNG (lossless)</option>
+          <option value="image/jpeg">JPEG (100%)</option>
+        </select>
         <button id="downloadBtn" disabled>Download</button>
       </fieldset>
 
