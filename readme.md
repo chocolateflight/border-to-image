@@ -1,6 +1,6 @@
 # Border-to-Image
 
-🖼️ **Border-to-Image** is a simple, single-page web app that lets you upload an image, add custom borders (inner or outer), adjust aspect ratios, set border widths in pixels or percentages, use simple or advanced per-side border controls, and download your edited photo at full resolution. It runs entirely in the browser (no server required) and works seamlessly on desktops and mobile devices.
+🖼️ **Border-to-Image** is a simple, single-page web app that lets you upload an image, add custom borders (inner or outer), adjust aspect ratios, set border widths in pixels or percentages, use simple or advanced per-side border controls, add EXIF data overlays, and download your edited photo at full resolution. It runs entirely in the browser (no server required) and works seamlessly on desktops and mobile devices.
 
 ---
 
@@ -9,6 +9,12 @@
 - **Upload**: JPG/PNG/BMP/GIF images directly from your device.
 - **Inner Border**: Adds a border around the image, increasing canvas size based on the specified width(s). Maintains the image's position relative to the borders (offset correctly in Advanced Mode).
 - **Outer Border**: Adds a border while optionally resizing the entire canvas to a new aspect ratio (e.g. 4:3, 1:1). Fills the background color. Image content (including any inner borders) is positioned based on border settings and aspect ratio padding.
+- **EXIF Data Overlay**: Add professional metadata to your images:
+  - Display date, time, camera model, aperture, shutter speed, ISO, location, and copyright.
+  - Format metadata with customizable separators.
+  - Choose from multiple positioning options (full bottom/top or corner placement).
+  - Scales automatically with image size or set manual sizing.
+  - Handle both fraction (1/x) and seconds style shutter speeds.
 - **px / % Width Units**: Define border widths using fixed pixels (`px`) or percentages (`%`) relative to the current image dimensions at the time of application.
 - **Simple / Advanced Mode**:
     - Toggle between modes at any time.
@@ -48,10 +54,26 @@ A live version is hosted at: [https://chocolateflight.github.io/border-to-image/
     - In **Advanced Mode**, enter values for Top, Right, Bottom, and Left.
     - Select a target **Aspect Ratio** or "Keep Current".
     - Click **Apply Outer Border** to add it.
-5.  **Undo/Reset**:
-    - **Undo** removes the last border action applied.
-    - **Reset** clears all borders, restoring the original uploaded image.
-6.  **Download**: Choose **PNG** or **JPEG** format, then click **Download**.
+5.  **EXIF Data Overlay**:
+    - Toggle "Show EXIF overlay" to enable/disable the feature.
+    - In the **Content** tab, enter the metadata information:
+      - Date and Time (with option to include/exclude time)
+      - Camera model
+      - Aperture (with auto-formatting)
+      - Shutter speed (with toggle between fraction and seconds formats)
+      - ISO
+      - Location
+      - Copyright (with auto-formatting)
+    - In the **Display** tab, customize the appearance:
+      - Position (Full Bottom, Full Top, Bottom Right Corner, Top Left Corner)
+      - Text Size (Auto-scale or Manual control)
+      - Separator (Pipe, Bullet, Dash, Comma, Space)
+      - Font size and padding (when Manual control is selected)
+    - Click **Apply EXIF Overlay** to add it to the image.
+6.  **Undo/Reset**:
+    - **Undo** removes the last border or EXIF action applied.
+    - **Reset** clears all borders and EXIF overlays, restoring the original uploaded image.
+7.  **Download**: Choose **PNG** or **JPEG** format, then click **Download**.
 
 ---
 

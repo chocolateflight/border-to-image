@@ -111,6 +111,133 @@
             <button id="applyOuter" disabled>Apply Outer Border</button>
       </fieldset>
 
+      <fieldset id="exifSection">
+        <legend>EXIF Data</legend>
+        <div class="exif-toggle-container">
+          <label for="showExifToggle">Show EXIF overlay:</label>
+          <input type="checkbox" id="showExifToggle" disabled>
+        </div>
+        
+        <div class="exif-fields" id="exifOptionsContainer">
+          <div class="exif-tabs">
+            <button type="button" class="exif-tab-btn active" data-tab="content" onclick="switchTab(this, 'content')">Content</button>
+            <button type="button" class="exif-tab-btn" data-tab="style" onclick="switchTab(this, 'style')">Display</button>
+          </div>
+          
+          <!-- Content Tab -->
+          <div class="exif-tab-content active" id="content-tab">
+            <div class="exif-field-group">
+              <div class="exif-field date-field">
+                <label for="exifDate">Date:</label>
+                <input type="date" id="exifDate" disabled>
+                <div class="inline-checkbox">
+                  <input type="checkbox" id="showTimeToggle" disabled checked>
+                  <label for="showTimeToggle">Include time</label>
+                </div>
+              </div>
+              <div class="exif-field time-field" id="timeFieldContainer">
+                <label for="exifTime">Time:</label>
+                <input type="time" id="exifTime" disabled>
+              </div>
+              <div class="exif-field">
+                <label for="exifCamera">Camera:</label>
+                <input type="text" id="exifCamera" placeholder="Camera model" disabled>
+              </div>
+              <div class="exif-field">
+                <label for="exifAperture">Aperture:</label>
+                <div class="prefix-input">
+                  <span class="input-prefix">f/</span>
+                  <input type="text" id="exifAperture" placeholder="5.6" disabled>
+                </div>
+              </div>
+              <div class="exif-field">
+                <label for="exifShutter">Shutter:</label>
+                <div class="shutter-input-group">
+                  <select id="shutterTypeToggle" disabled>
+                    <option value="fraction">1/x sec</option>
+                    <option value="seconds">x sec</option>
+                  </select>
+                  <div class="prefix-input" id="fractionShutterInput">
+                    <span class="input-prefix">1/</span>
+                    <input type="text" id="exifShutter" placeholder="2000" disabled>
+                  </div>
+                  <div class="prefix-input hidden" id="secondsShutterInput">
+                    <input type="text" id="exifShutterSeconds" placeholder="30" class="with-suffix" disabled>
+                    <span class="input-suffix">s</span>
+                  </div>
+                </div>
+              </div>
+              <div class="exif-field">
+                <label for="exifISO">ISO:</label>
+                <input type="text" id="exifISO" placeholder="200" disabled>
+              </div>
+              <div class="exif-field">
+                <label for="exifLocation">Location:</label>
+                <input type="text" id="exifLocation" placeholder="Coordinates or location" disabled>
+              </div>
+              <div class="exif-field">
+                <label for="exifCopyright">Copyright:</label>
+                <div class="prefix-input">
+                  <span class="input-prefix">©</span>
+                  <input type="text" id="exifCopyright" placeholder="Photographer" disabled>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Display Style Tab -->
+          <div class="exif-tab-content" id="style-tab">
+            <div class="exif-field-group">
+              <div class="exif-field">
+                <label for="exifPosition">Position:</label>
+                <select id="exifPosition" disabled>
+                  <option value="bottom">Full Bottom</option>
+                  <option value="top">Full Top</option>
+                  <option value="bottomRight">Bottom Right Corner</option>
+                  <option value="topLeft">Top Left Corner</option>
+                </select>
+              </div>
+              <div class="exif-field">
+                <label for="exifSizeMode">Text Size:</label>
+                <select id="exifSizeMode" disabled>
+                  <option value="responsive">Auto-scale with image</option>
+                  <option value="fixed">Manual size control</option>
+                </select>
+              </div>
+              <div class="exif-field">
+                <label for="exifSeparator">Separator:</label>
+                <select id="exifSeparator" disabled>
+                  <option value=" | ">Pipe ( | )</option>
+                  <option value=" • ">Bullet ( • )</option>
+                  <option value=" - ">Dash ( - )</option>
+                  <option value=", ">Comma ( , )</option>
+                  <option value=" ">Space</option>
+                </select>
+              </div>
+              
+              <div id="manualSizeControls" class="hidden size-controls">
+                <div class="exif-field">
+                  <label for="exifFontSize">Font Size:</label>
+                  <div class="sliderGroup">
+                    <input type="range" id="exifFontSize" min="12" max="40" value="20" disabled>
+                    <span id="exifFontSizeVal">20px</span>
+                  </div>
+                </div>
+                <div class="exif-field">
+                  <label for="exifPadding">Padding:</label>
+                  <div class="sliderGroup">
+                    <input type="range" id="exifPadding" min="10" max="40" value="20" disabled>
+                    <span id="exifPaddingVal">20px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button id="applyExif" disabled>Apply EXIF Overlay</button>
+        </div>
+      </fieldset>
+
       <fieldset id="downloadSection"> <legend>Download</legend>
         <label for="dlFormat">Format:</label>
         <select id="dlFormat" disabled>
@@ -135,5 +262,23 @@
   </footer>
 
   <script src="script.js"></script>
+  <script>
+    function switchTab(button, tabName) {
+      // Update active button
+      document.querySelectorAll('.exif-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      button.classList.add('active');
+      
+      // Update visible tab content
+      document.querySelectorAll('.exif-tab-content').forEach(content => {
+        if (content.id === tabName + '-tab') {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
+    }
+  </script>
 </body>
 </html>

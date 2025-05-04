@@ -34,6 +34,34 @@
   const outerNumB = document.getElementById("outerNumB");
   const outerNumL = document.getElementById("outerNumL");
   const ratioSelect = document.getElementById("ratioSelect");
+  // EXIF Elements
+  const showExifToggle = document.getElementById("showExifToggle");
+  const exifOptionsContainer = document.getElementById("exifOptionsContainer");
+  const exifDate = document.getElementById("exifDate");
+  const exifTime = document.getElementById("exifTime");
+  const showTimeToggle = document.getElementById("showTimeToggle");
+  const timeFieldContainer = document.getElementById("timeFieldContainer");
+  const exifCamera = document.getElementById("exifCamera");
+  const exifAperture = document.getElementById("exifAperture");
+  const exifShutter = document.getElementById("exifShutter");
+  const exifShutterSeconds = document.getElementById("exifShutterSeconds");
+  const shutterTypeToggle = document.getElementById("shutterTypeToggle");
+  const fractionShutterInput = document.getElementById("fractionShutterInput");
+  const secondsShutterInput = document.getElementById("secondsShutterInput");
+  const exifISO = document.getElementById("exifISO");
+  const exifLocation = document.getElementById("exifLocation");
+  const exifCopyright = document.getElementById("exifCopyright");
+  const exifPosition = document.getElementById("exifPosition");
+  const exifSizeMode = document.getElementById("exifSizeMode");
+  const exifSeparator = document.getElementById("exifSeparator");
+  const manualSizeControls = document.getElementById("manualSizeControls");
+  const exifFontSize = document.getElementById("exifFontSize");
+  const exifFontSizeVal = document.getElementById("exifFontSizeVal");
+  const exifPadding = document.getElementById("exifPadding");
+  const exifPaddingVal = document.getElementById("exifPaddingVal");
+  const exifTabButtons = document.querySelectorAll(".exif-tab-btn");
+  const exifTabContents = document.querySelectorAll(".exif-tab-content");
+  const applyExif = document.getElementById("applyExif");
 
   // --- Application State ---
   let originalImg = null;
@@ -41,6 +69,8 @@
   let ops = []; // History of applied border operations
   let raf = null; // requestAnimationFrame ID for debouncing previews
   let isAdvancedMode = false;
+  let exifData = null; // Store extracted EXIF data
+  let exifOp = null; // Current EXIF overlay operation
 
   // --- Utility Functions ---
 
@@ -69,7 +99,27 @@
       outerNumL,
       ratioSelect,
       dlFormat,
+      // EXIF elements
+      showExifToggle,
+      showTimeToggle,
+      exifDate,
+      exifTime,
+      exifCamera,
+      exifAperture,
+      exifShutter,
+      exifShutterSeconds,
+      shutterTypeToggle,
+      exifISO,
+      exifLocation,
+      exifCopyright,
+      exifPosition,
+      exifSizeMode,
+      exifSeparator,
+      exifFontSize,
+      exifPadding,
+      applyExif,
       ...document.querySelectorAll(".unit-btn"),
+      ...document.querySelectorAll(".exif-tab-btn"),
     ];
     elementsToToggle.forEach((el) => {
       if (el) el.disabled = !on;
@@ -152,6 +202,12 @@
     const allOps = previewOp ? useOps.concat([previewOp]) : useOps.slice();
 
     allOps.forEach((op) => {
+      if (op.type === "exif") {
+        // Handle EXIF overlay operation separately
+        // Just keep the current canvas state for now, apply EXIF later
+        return;
+      }
+
       const currentImgWidth = tempCanvas.width;
       const currentImgHeight = tempCanvas.height;
       const pxBorders = calculatePixelWidths(
@@ -198,6 +254,14 @@
     canvas.height = tempCanvas.height;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(tempCanvas, 0, 0);
+
+    // Apply EXIF overlay if needed
+    const exifOpToApply = allOps.find(op => op.type === "exif") || 
+                          (showExifToggle.checked ? getExifPreviewOp() : null);
+    
+    if (exifOpToApply) {
+      renderExifOverlay(exifOpToApply);
+    }
   }
 
   // Debounce render calls using requestAnimationFrame for smooth previews.
@@ -265,6 +329,20 @@
         outerNumL.value =
         outerNumR.value =
           outerNum.value;
+      
+      // Reset EXIF display settings
+      resetExifUI();
+      
+      // Extract and populate EXIF data
+      extractExifData(f).then(data => {
+        exifData = data;
+        updateExifFields(data);
+      });
+      
+      // Set EXIF options visibility based on checkbox state
+      if (exifOptionsContainer && showExifToggle) {
+        exifOptionsContainer.classList.toggle("hidden", !showExifToggle.checked);
+      }
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -583,7 +661,552 @@
     );
   });
 
+  // --- EXIF Logic ---
+
+  // Extract EXIF data from the uploaded image
+  function extractExifData(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const result = e.target.result;
+        
+        // Default EXIF data (empty)
+        const defaultData = {
+          datetime: "",
+          camera: "",
+          aperture: "",
+          shutter: "",
+          iso: "",
+          location: "",
+          copyright: ""
+        };
+
+        try {
+          // Check for EXIF data in JPEG files
+          if (file.type === "image/jpeg") {
+            // Simple EXIF extraction for basic data
+            // This is a basic implementation, for full EXIF support 
+            // consider using an EXIF library like exif-js
+            
+            // Look for date/time data
+            const dateTimeMatch = /\d{4}([-:]\d{2}){2}\s\d{2}([-:]\d{2}){2}/.exec(result);
+            if (dateTimeMatch) {
+              defaultData.datetime = dateTimeMatch[0];
+            }
+            
+            // Try to extract camera model info
+            const cameraModelMatch = /([A-Za-z]+\s?[A-Za-z0-9]+\s(EOS|ILCE|D[0-9]+|Alpha|FinePix|COOLPIX|LUMIX|NIKON|CANON|SONY|FUJI|OLYMPUS|LEICA)[a-zA-Z0-9-\s]*)/.exec(result);
+            if (cameraModelMatch) {
+              defaultData.camera = cameraModelMatch[0].trim();
+            }
+            
+            // Extract aperture (f-stop)
+            const apertureMatch = /(f\/[\d.]+)/.exec(result);
+            if (apertureMatch) {
+              defaultData.aperture = apertureMatch[0];
+            }
+            
+            // Extract shutter speed
+            const shutterMatch = /(1\/\d+\ss)/.exec(result);
+            if (shutterMatch) {
+              defaultData.shutter = shutterMatch[0].replace('s', '');
+            }
+            
+            // Extract ISO
+            const isoMatch = /(ISO\s\d+)/.exec(result);
+            if (isoMatch) {
+              defaultData.iso = isoMatch[0].replace('ISO ', '');
+            }
+            
+            // Look for GPS data
+            const gpsMatch = /(\d+°\s\d+'\s\d+(\.\d+)?"\s[NSEW])/.exec(result);
+            if (gpsMatch) {
+              defaultData.location = gpsMatch[0];
+            }
+            
+            // Try to extract copyright info
+            const copyrightMatch = /(©|copyright|Copyright|COPY|©)([^a-zA-Z0-9]?)([\s]?)([a-zA-Z0-9\s]+)/.exec(result);
+            if (copyrightMatch) {
+              defaultData.copyright = copyrightMatch[0].trim();
+            }
+          }
+          
+          // For a production app, use a dedicated EXIF library
+          // This simple implementation above won't catch all EXIF data
+          
+          resolve(defaultData);
+        } catch (error) {
+          console.warn("Failed to extract EXIF data:", error);
+          resolve(defaultData);
+        }
+      };
+      
+      reader.readAsBinaryString(file);
+    });
+  }
+
+  // Update the EXIF form fields with extracted or default data
+  function updateExifFields(data) {
+    // Handle date and time separately
+    if (data.datetime) {
+      const dateTimeParts = data.datetime.split(' ');
+      if (dateTimeParts.length === 2) {
+        // Format date to YYYY-MM-DD for the date input
+        const datePart = dateTimeParts[0].replace(/:/g, '-');
+        exifDate.value = datePart;
+        
+        // Format time for the time input
+        exifTime.value = dateTimeParts[1];
+        showTimeToggle.checked = true;
+      } else {
+        exifDate.value = "";
+        exifTime.value = "";
+        showTimeToggle.checked = false;
+      }
+    } else {
+      exifDate.value = "";
+      exifTime.value = "";
+      showTimeToggle.checked = false;
+    }
+    
+    // Update time field visibility
+    toggleTimeFieldVisibility();
+    
+    // Set camera model
+    exifCamera.value = data.camera || "";
+    
+    // Set aperture without the f/ prefix
+    exifAperture.value = data.aperture ? data.aperture.replace('f/', '') : "";
+    
+    // Handle shutter speed with more flexibility
+    if (data.shutter) {
+      const shutterValue = data.shutter.trim();
+      // Check if it's a fraction (1/X) format
+      if (shutterValue.startsWith('1/')) {
+        shutterTypeToggle.value = 'fraction';
+        exifShutter.value = shutterValue.replace('1/', '');
+        exifShutterSeconds.value = '';
+      } 
+      // Check if it's a seconds format with 's' or '"' suffix
+      else if (shutterValue.endsWith('s') || shutterValue.endsWith('"')) {
+        shutterTypeToggle.value = 'seconds';
+        exifShutterSeconds.value = shutterValue.replace(/[s"]/g, '');
+        exifShutter.value = '';
+      } 
+      // Otherwise just use the value as is in the appropriate field
+      else {
+        // Try to determine if it's a fraction or seconds based on value
+        const numValue = parseFloat(shutterValue);
+        if (numValue && numValue < 1) {
+          // It's likely a fraction like 0.5s, convert to seconds
+          shutterTypeToggle.value = 'seconds';
+          exifShutterSeconds.value = shutterValue;
+          exifShutter.value = '';
+        } else {
+          // Default to fraction
+          shutterTypeToggle.value = 'fraction';
+          exifShutter.value = shutterValue;
+          exifShutterSeconds.value = '';
+        }
+      }
+      // Update the UI based on the selected shutter type
+      toggleShutterInputType();
+    } else {
+      // Default values
+      shutterTypeToggle.value = 'fraction';
+      exifShutter.value = "";
+      exifShutterSeconds.value = "";
+      toggleShutterInputType();
+    }
+    
+    // Set ISO
+    exifISO.value = data.iso || "";
+    
+    // Set location
+    exifLocation.value = data.location || "";
+    
+    // Set copyright without the © prefix
+    exifCopyright.value = data.copyright ? data.copyright.replace(/^©\s*/, '') : "";
+  }
+
+  // Generate a current EXIF preview operation based on form values
+  function getExifPreviewOp() {
+    // Format date and time for display
+    let dateTimeDisplay = "";
+    if (exifDate.value) {
+      // Format date as YYYY/MM/DD for display
+      dateTimeDisplay = exifDate.value.replace(/-/g, '/');
+      
+      // Add time if the checkbox is checked and time is provided
+      if (showTimeToggle.checked && exifTime.value) {
+        dateTimeDisplay += ` ${exifTime.value}`;
+      }
+    }
+    
+    // Format aperture with f/ prefix
+    let aperture = exifAperture.value.trim();
+    if (aperture) {
+      aperture = `f/${aperture}`;
+    }
+    
+    // Format shutter speed based on selected mode
+    let shutter = "";
+    if (shutterTypeToggle.value === 'fraction') {
+      const fractionValue = exifShutter.value.trim();
+      if (fractionValue) {
+        shutter = `1/${fractionValue}`;
+      }
+    } else {
+      const secondsValue = exifShutterSeconds.value.trim();
+      if (secondsValue) {
+        shutter = `${secondsValue}s`;
+      }
+    }
+    
+    // Format copyright with © prefix
+    let copyright = exifCopyright.value.trim();
+    if (copyright && !copyright.startsWith('©')) {
+      copyright = `© ${copyright}`;
+    }
+    
+    // Get separator
+    const separator = exifSeparator ? exifSeparator.value : ' | ';
+    
+    return {
+      type: "exif",
+      date: dateTimeDisplay,
+      camera: exifCamera.value,
+      aperture: aperture,
+      shutter: shutter,
+      iso: exifISO.value,
+      location: exifLocation.value,
+      copyright: copyright,
+      position: exifPosition.value,
+      sizeMode: exifSizeMode.value,
+      displayStyle: 'classic', // Always use classic style
+      separator: separator,
+      bgColor: '#000000', // Black background
+      bgOpacity: 0.85, // Standard opacity
+      textColor: '#FFFFFF', // White text
+      fontSize: parseInt(exifFontSize.value, 10),
+      padding: parseInt(exifPadding.value, 10)
+    };
+  }
+
+  // Calculate a responsive font size based on the image dimensions
+  function calculateResponsiveFontSize(imageWidth, imageHeight, baseFontSize) {
+    const minSize = 14;
+    const maxSize = 40;
+    
+    // If fixed size is requested, use the base font size but still enforce min/max
+    if (exifSizeMode && exifSizeMode.value === 'fixed') {
+      return Math.min(Math.max(baseFontSize, minSize), maxSize);
+    }
+    
+    const scaleFactor = 0.015; // 1.5% of the image width
+    
+    // Calculate a font size based on the smaller dimension
+    const smallerDimension = Math.min(imageWidth, imageHeight);
+    let fontSize = Math.round(smallerDimension * scaleFactor);
+    
+    // For very large images, cap the font size
+    fontSize = Math.min(fontSize, maxSize);
+    
+    // For very small images, ensure a minimum font size
+    fontSize = Math.max(fontSize, minSize);
+    
+    return fontSize;
+  }
+
+  // Render the EXIF data overlay on the canvas
+  function renderExifOverlay(op) {
+    if (!op) return;
+    
+    // Create an array of field data objects
+    const fieldData = [
+      { label: "", value: op.date, show: op.date.trim() !== "" },
+      { label: "", value: op.camera, show: op.camera.trim() !== "" },
+      { 
+        label: "", 
+        value: formatCameraSettings(op.aperture, op.shutter, op.iso, op.separator), 
+        show: op.aperture.trim() !== "" || op.shutter.trim() !== "" || op.iso.trim() !== "" 
+      },
+      { label: "", value: op.location, show: op.location.trim() !== "" },
+      { label: "", value: op.copyright, show: op.copyright.trim() !== "" }
+    ].filter(field => field.show);
+    
+    if (fieldData.length === 0) return;
+    
+    // Get the separator for text joining
+    const separator = op.separator || ' | ';
+    
+    // Format the EXIF text
+    let exifText = fieldData.map(field => field.value).join(separator);
+    
+    // Calculate a responsive font size based on the image dimensions
+    const baseFontSize = op.fontSize || 20;
+    let fontSize = calculateResponsiveFontSize(canvas.width, canvas.height, baseFontSize);
+    
+    // Set the font with calculated size
+    ctx.font = `${fontSize}px 'Consolas', monospace`;
+    
+    // Measure text dimensions
+    const textMetrics = ctx.measureText(exifText);
+    const textWidth = textMetrics.width;
+    const lineHeight = fontSize * 1.5;
+    const textHeight = lineHeight;
+    
+    // Calculate overlay dimensions
+    const basePadding = op.padding || 20;
+    let paddingX = basePadding;
+    let paddingY = basePadding;
+    const overlayHeight = textHeight + (paddingY * 2);
+    
+    // Set position based on user selection
+    const position = op.position || 'bottom';
+    let overlayX = 0;
+    let overlayY = 0;
+    let overlayWidth = canvas.width;
+    
+    // Apply different positioning for corner positions
+    const isCornerPosition = ['bottomRight', 'topLeft'].includes(position);
+    
+    if (isCornerPosition) {
+      // For corner positions, calculate a smaller width based on text
+      overlayWidth = Math.min(textWidth + (paddingX * 2), canvas.width * 0.5);
+    }
+    
+    switch (position) {
+      case 'top':
+        overlayY = 0;
+        break;
+      case 'bottom':
+        overlayY = canvas.height - overlayHeight;
+        break;
+      case 'topLeft':
+        overlayY = 0;
+        break;
+      case 'bottomRight':
+        overlayY = canvas.height - overlayHeight;
+        overlayX = canvas.width - overlayWidth;
+        break;
+      default:
+        overlayY = canvas.height - overlayHeight;
+    }
+    
+    // Apply the classic black bar style
+    ctx.save(); // Save the current state
+    
+    // Black background with standard opacity
+    ctx.fillStyle = `rgba(0, 0, 0, 0.85)`;
+    ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
+    
+    // Add thin white top border
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(overlayX, overlayY, overlayWidth, 1);
+    
+    // Draw text
+    ctx.fillStyle = '#FFFFFF'; // White text
+    ctx.textBaseline = 'middle';
+    
+    // Single line with truncation if needed
+    const textY = overlayY + (overlayHeight / 2);
+    
+    // Check if the text is too long for the canvas
+    if (textWidth + (paddingX * 2) > overlayWidth) {
+      // Text is too long, need to truncate
+      const maxWidth = overlayWidth - (paddingX * 2);
+      ctx.fillText(exifText, overlayX + paddingX, textY, maxWidth);
+    } else {
+      ctx.fillText(exifText, overlayX + paddingX, textY);
+    }
+    
+    ctx.restore(); // Restore the original state
+  }
+  
+  // Format camera settings in a nice way
+  function formatCameraSettings(aperture, shutter, iso, separator) {
+    const parts = [];
+    if (aperture.trim()) parts.push(aperture);
+    if (shutter.trim()) parts.push(shutter);
+    if (iso.trim()) parts.push(`ISO ${iso}`);
+    
+    // If we have aperture and shutter but no ISO, format as "f/5.6 at 1/2000"
+    if (parts.length === 2 && aperture.trim() && shutter.trim() && !iso.trim()) {
+      return `${aperture} at ${shutter}`;
+    }
+    
+    return parts.join(separator || ' | ');
+  }
+
+  // Update the EXIF preview when form values change
+  function updateExifPreview() {
+    if (!originalImg) return;
+    scheduleRender(getExifPreviewOp());
+  }
+
+  // Apply EXIF overlay to the image
+  function applyExifOverlay() {
+    if (!originalImg || !exifDate) return;
+    
+    // Create the operation object
+    const op = getExifPreviewOp();
+    
+    // Find existing EXIF operation to replace
+    const exifOpIndex = ops.findIndex(o => o.type === "exif");
+    if (exifOpIndex >= 0) {
+      // Replace existing EXIF op
+      ops[exifOpIndex] = op;
+    } else {
+      // Add new EXIF op
+      ops.push(op);
+    }
+    
+    // Render with updated operations
+    render(ops);
+    undoBtn.disabled = ops.length === 0;
+  }
+
+  // Toggle EXIF preview when checkbox is toggled
+  showExifToggle.addEventListener("change", () => {
+    if (exifOptionsContainer) {
+      // Show/hide EXIF options based on toggle
+      exifOptionsContainer.classList.toggle("hidden", !showExifToggle.checked);
+    }
+    
+    if (originalImg) {
+      render(ops);
+    }
+  });
+  
+  // Handle show time toggle
+  if (showTimeToggle) {
+    showTimeToggle.addEventListener("change", () => {
+      toggleTimeFieldVisibility();
+      updateExifPreview();
+    });
+  }
+  
+  // Handle size mode changes
+  exifSizeMode.addEventListener("change", () => {
+    toggleManualSizeControls();
+    updateExifPreview();
+  });
+  
+  // Update preview when font size changes
+  exifFontSize.addEventListener("input", () => {
+    exifFontSizeVal.textContent = `${exifFontSize.value}px`;
+    updateExifPreview();
+  });
+  
+  // Update preview when padding changes
+  exifPadding.addEventListener("input", () => {
+    exifPaddingVal.textContent = `${exifPadding.value}px`;
+    updateExifPreview();
+  });
+  
+  // Update preview when any EXIF form field changes
+  [
+    exifDate, exifTime, exifCamera, exifAperture, exifShutter, exifShutterSeconds, exifISO, exifLocation, 
+    exifCopyright, exifPosition, exifSeparator
+  ].forEach(input => {
+    if (input) {
+      input.addEventListener("input", updateExifPreview);
+    }
+  });
+  
+  // Apply EXIF overlay when button is clicked
+  applyExif.addEventListener("click", applyExifOverlay);
+
   // --- Initial Setup ---
   // Initially disable controls until an image is loaded.
   enableControls(false);
+  
+  // Initially hide EXIF options
+  if (exifOptionsContainer) {
+    exifOptionsContainer.classList.add("hidden");
+  }
+  
+  // Setup EXIF tabs navigation
+  if (exifTabButtons && exifTabButtons.length > 0) {
+    exifTabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+        
+        // Update active states for buttons
+        exifTabButtons.forEach(btn => {
+          btn.classList.remove('active');
+        });
+        button.classList.add('active');
+        
+        // Show the target tab content, hide others
+        exifTabContents.forEach(content => {
+          if (content.id === `${targetTab}-tab`) {
+            content.classList.add('active');
+          } else {
+            content.classList.remove('active');
+          }
+        });
+      });
+    });
+  }
+  
+  // Initialize time field visibility
+  toggleTimeFieldVisibility();
+  
+  // Initialize shutter input type visibility
+  toggleShutterInputType();
+  
+  // Initialize manual size controls visibility
+  toggleManualSizeControls();
 })();
+
+// Tab switching functionality for EXIF panel
+function setupTabNavigation() {
+  if (!exifTabButtons || !exifTabContents) return;
+  
+  exifTabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.dataset.tab;
+      
+      // Update active states for buttons
+      exifTabButtons.forEach(btn => {
+        btn.classList.remove('active');
+      });
+      button.classList.add('active');
+      
+      // Show the target tab content, hide others
+      exifTabContents.forEach(content => {
+        if (content.id === `${targetTab}-tab`) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
+    });
+  });
+}
+
+// Toggle time field visibility based on checkbox
+function toggleTimeFieldVisibility() {
+  if (timeFieldContainer && showTimeToggle) {
+    timeFieldContainer.style.display = showTimeToggle.checked ? 'flex' : 'none';
+  }
+}
+
+// Toggle manual size controls visibility
+function toggleManualSizeControls() {
+  if (manualSizeControls && exifSizeMode) {
+    manualSizeControls.classList.toggle('hidden', exifSizeMode.value !== 'fixed');
+  }
+}
+
+// Toggle between fraction (1/x) and seconds shutter speed
+function toggleShutterInputType() {
+  if (shutterTypeToggle && fractionShutterInput && secondsShutterInput) {
+    const isSeconds = shutterTypeToggle.value === 'seconds';
+    
+    fractionShutterInput.classList.toggle('hidden', isSeconds);
+    secondsShutterInput.classList.toggle('hidden', !isSeconds);
+  }
+}

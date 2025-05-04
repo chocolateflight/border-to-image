@@ -92,11 +92,11 @@ input:checked + .toggle-slider:before {
 }
 
 fieldset {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 1rem;
-  background: #fff;
-  transition: opacity 0.3s ease-in-out;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 12px;
+  background-color: var(--fieldset-bg);
 }
 
 legend {
@@ -360,4 +360,424 @@ footer a:focus {
   opacity: 0.5;
   pointer-events: none;
   user-select: none;
+}
+
+/* EXIF Data Styling */
+#exifSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exif-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.exif-toggle-container label {
+  margin-right: 10px;
+}
+
+.exif-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Hidden when toggle is off */
+.exif-fields.hidden {
+  display: none;
+}
+
+/* Tabs interface */
+.exif-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.exif-tab-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  padding: 8px 15px;
+  margin-right: 5px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+  color: #666;
+}
+
+.exif-tab-btn:hover {
+  background-color: #e9e9e9;
+}
+
+.exif-tab-btn.active {
+  background-color: #fff;
+  border-bottom: 1px solid #fff;
+  margin-bottom: -1px;
+  color: #333;
+  font-weight: bold;
+}
+
+.exif-tab-content {
+  display: none;
+  padding: 10px 0;
+}
+
+.exif-tab-content.active {
+  display: block;
+}
+
+/* Field styling */
+.exif-field {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.exif-field:last-child {
+  margin-bottom: 0;
+}
+
+.exif-field label {
+  min-width: 95px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding-right: 10px;
+}
+
+.exif-field input[type="text"],
+.exif-field input[type="date"],
+.exif-field input[type="time"],
+.exif-field input[type="color"],
+.exif-field select {
+  flex: 1;
+  min-width: 150px;
+  display: block;
+  height: 38px; /* Consistent height */
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Input fields with prefixes */
+.prefix-input {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 0;
+  margin-top: 0;
+  height: 38px; /* Match other inputs */
+}
+
+.prefix-input .input-prefix {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-right: none;
+  padding: 0 10px;
+  color: #666;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  font-size: 14px;
+  min-width: 34px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prefix-input input {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+  flex-grow: 1;
+  margin: 0;
+  padding: 0.5rem;
+  height: 100%;
+}
+
+/* Date and time field layout */
+.date-field {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.date-field input[type="date"] {
+  min-width: 150px;
+  flex: 1;
+  margin-bottom: 0;
+  height: 38px; /* Consistent height */
+}
+
+.date-field .inline-checkbox {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin-left: 0;
+  height: 30px;
+}
+
+.date-field .inline-checkbox input {
+  width: auto;
+  margin: 0 6px 0 0;
+  cursor: pointer;
+}
+
+.date-field .inline-checkbox label {
+  font-size: 12px;
+  font-weight: normal;
+  margin: 0;
+  display: inline;
+  width: auto;
+  color: #555;
+  cursor: pointer;
+}
+
+/* Color with opacity control */
+.color-with-opacity {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.color-with-opacity input[type="color"] {
+  width: 70px;
+  margin-right: 10px;
+}
+
+/* Time field container */
+.time-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.time-field label {
+  min-width: 95px;
+  margin-bottom: 0;
+  padding-right: 10px;
+}
+
+.exif-field-group {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+/* Slider group */
+.sliderGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sliderGroup input[type="range"] {
+  flex-grow: 1;
+}
+
+.sliderGroup span {
+  min-width: 40px;
+  text-align: right;
+  font-size: 13px;
+}
+
+.sliderGroup.smaller {
+  width: 120px;
+  min-width: 120px;
+}
+
+/* Form field visibilities */
+.hidden {
+  display: none !important;
+}
+
+/* Apply button */
+#applyExif {
+  margin-top: 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 15px;
+  cursor: pointer;
+}
+
+#applyExif:hover:not(:disabled) {
+  background-color: #0069d9;
+}
+
+/* Rendering EXIF overlay on canvas */
+.exif-overlay {
+  position: absolute;
+  color: white;
+  font-family: 'Consolas', monospace;
+  text-align: left;
+  box-sizing: border-box;
+  line-height: 1.4;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Base styles for all display styles */
+.exif-overlay {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  font-size: 20px;
+}
+
+/* Clean style - minimal and simple */
+.exif-overlay.clean {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10px 15px;
+  font-size: 16px;
+}
+
+/* Classic style - traditional black bar */
+.exif-overlay.classic {
+  background-color: rgba(0, 0, 0, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 15px 20px;
+}
+
+/* Modern style - semi-transparent with gradient */
+.exif-overlay.modern {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+  padding: 15px 20px;
+  border-radius: 0;
+}
+
+/* Pro style - corner tag */
+.exif-overlay.pro {
+  width: auto;
+  max-width: 50%;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px 15px;
+  border-radius: 0 0 0 4px;
+}
+
+/* Position variations */
+.exif-overlay.bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.exif-overlay.top {
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.exif-overlay.bottomRight {
+  bottom: 0;
+  right: 0;
+}
+
+.exif-overlay.topLeft {
+  top: 0;
+  left: 0;
+}
+
+.sliderGroup.smaller {
+  width: 120px;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.sliderGroup.smaller .valDisplay {
+  min-width: 1.5em;
+}
+
+#customStyleOptions {
+  display: block;
+}
+
+#customStyleOptions.hidden {
+  display: none;
+}
+
+/* Basic elements */
+
+/* Shutter input group */
+.shutter-input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 5px;
+  width: 100%;
+}
+
+.shutter-input-group select {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+/* Input with suffix */
+.input-suffix {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-left: none;
+  padding: 0 10px;
+  color: #666;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  font-size: 14px;
+  min-width: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prefix-input input.with-suffix {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Tab descriptions */
+.tab-description {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #666;
+  font-size: 13px;
+}
+
+/* EXIF Preview box */
+.exif-preview-box {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  font-size: 14px;
+}
+
+.style-preview {
+  margin-top: 20px;
+  border-top: 1px dashed #ddd;
+  padding-top: 15px;
+}
+
+.style-preview p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* Custom style tab handling */
+.custom-style-active #customStyleTab {
+  display: inline-block;
 }
