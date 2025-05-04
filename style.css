@@ -434,21 +434,21 @@ footer a:focus {
 
 /* Field styling */
 .exif-field {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
   margin-bottom: 15px;
-}
-
-.exif-field:last-child {
-  margin-bottom: 0;
+  position: relative;
 }
 
 .exif-field label {
-  min-width: 95px;
-  margin-top: 8px;
-  margin-bottom: 0;
-  padding-right: 10px;
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+/* Checkbox alignment fix */
+.exif-field input[type="checkbox"] {
+  vertical-align: middle;
+  margin-top: 5px;
 }
 
 .exif-field input[type="text"],
@@ -780,4 +780,74 @@ footer a:focus {
 /* Custom style tab handling */
 .custom-style-active #customStyleTab {
   display: inline-block;
+}
+
+/* New EXIF Display Styles */
+/* Style preview thumbnails for the dropdown */
+.style-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.style-thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  padding: 5px;
+  transition: all 0.2s ease;
+}
+
+.style-thumbnail:hover {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.style-thumbnail.active {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.style-thumbnail img {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.style-thumbnail .style-name {
+  font-size: 12px;
+  margin-top: 5px;
+  text-align: center;
+  color: #333;
+}
+
+/* Color with opacity control */
+.color-with-opacity {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.color-with-opacity input[type="color"] {
+  width: 70px;
+  min-width: 70px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  height: 32px;
+}
+
+.color-with-opacity .sliderGroup {
+  flex-grow: 1;
+}
+
+/* Checkbox alignment fix for border align */
+#exifBorderAlign {
+  margin-top: 5px;
 }

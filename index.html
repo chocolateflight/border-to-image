@@ -112,7 +112,7 @@
       </fieldset>
 
       <fieldset id="exifSection">
-        <legend>EXIF Data</legend>
+        <legend>EXIF Data (Beta)</legend>
         <div class="exif-toggle-container">
           <label for="showExifToggle">Show EXIF overlay:</label>
           <input type="checkbox" id="showExifToggle" disabled>
@@ -189,13 +189,36 @@
           <div class="exif-tab-content" id="style-tab">
             <div class="exif-field-group">
               <div class="exif-field">
+                <label for="exifDisplayStyle">Style:</label>
+                <select id="exifDisplayStyle" disabled>
+                  <option value="classic">Classic Bar</option>
+                </select>
+              </div>
+              <div class="exif-field">
                 <label for="exifPosition">Position:</label>
                 <select id="exifPosition" disabled>
-                  <option value="bottom">Full Bottom</option>
-                  <option value="top">Full Top</option>
-                  <option value="bottomRight">Bottom Right Corner</option>
-                  <option value="topLeft">Top Left Corner</option>
+                  <option value="bottom">Below Image</option>
+                  <option value="top">Above Image</option>
                 </select>
+              </div>
+              <div class="exif-field">
+                <label for="exifAlignment">Alignment:</label>
+                <select id="exifAlignment" disabled>
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="exif-field">
+                <label for="exifInset">Text Inset:</label>
+                <div class="sliderGroup">
+                  <input type="range" id="exifInset" min="0" max="100" step="0.1" value="0" disabled>
+                  <span id="exifInsetVal">0%</span>
+                </div>
+              </div>
+              <div class="exif-field">
+                <label for="exifBorderAlign">Align with border:</label>
+                <input type="checkbox" id="exifBorderAlign" disabled>
               </div>
               <div class="exif-field">
                 <label for="exifSizeMode">Text Size:</label>
@@ -215,18 +238,34 @@
                 </select>
               </div>
               
+              <div class="exif-field">
+                <label for="exifBgColor">Background:</label>
+                <div class="color-with-opacity">
+                  <input type="color" id="exifBgColor" value="#000000" disabled>
+                  <div class="sliderGroup">
+                    <input type="range" id="exifBgOpacity" min="0" max="100" value="85" disabled>
+                    <span id="exifBgOpacityVal">85%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="exif-field">
+                <label for="exifTextColor">Text Color:</label>
+                <input type="color" id="exifTextColor" value="#FFFFFF" disabled>
+              </div>
+              
               <div id="manualSizeControls" class="hidden size-controls">
                 <div class="exif-field">
                   <label for="exifFontSize">Font Size:</label>
                   <div class="sliderGroup">
-                    <input type="range" id="exifFontSize" min="12" max="40" value="20" disabled>
+                    <input type="range" id="exifFontSize" min="12" max="200" value="20" disabled>
                     <span id="exifFontSizeVal">20px</span>
                   </div>
                 </div>
                 <div class="exif-field">
                   <label for="exifPadding">Padding:</label>
                   <div class="sliderGroup">
-                    <input type="range" id="exifPadding" min="10" max="40" value="20" disabled>
+                    <input type="range" id="exifPadding" min="10" max="200" value="20" disabled>
                     <span id="exifPaddingVal">20px</span>
                   </div>
                 </div>

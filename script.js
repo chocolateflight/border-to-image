@@ -54,6 +54,11 @@
   const exifPosition = document.getElementById("exifPosition");
   const exifSizeMode = document.getElementById("exifSizeMode");
   const exifSeparator = document.getElementById("exifSeparator");
+  const exifDisplayStyle = document.getElementById("exifDisplayStyle");
+  const exifBgColor = document.getElementById("exifBgColor");
+  const exifBgOpacity = document.getElementById("exifBgOpacity");
+  const exifBgOpacityVal = document.getElementById("exifBgOpacityVal");
+  const exifTextColor = document.getElementById("exifTextColor");
   const manualSizeControls = document.getElementById("manualSizeControls");
   const exifFontSize = document.getElementById("exifFontSize");
   const exifFontSizeVal = document.getElementById("exifFontSizeVal");
@@ -62,6 +67,10 @@
   const exifTabButtons = document.querySelectorAll(".exif-tab-btn");
   const exifTabContents = document.querySelectorAll(".exif-tab-content");
   const applyExif = document.getElementById("applyExif");
+  const exifAlignment = document.getElementById("exifAlignment");
+  const exifInset = document.getElementById("exifInset");
+  const exifInsetVal = document.getElementById("exifInsetVal");
+  const exifBorderAlign = document.getElementById("exifBorderAlign");
 
   // --- Application State ---
   let originalImg = null;
@@ -115,11 +124,19 @@
       exifPosition,
       exifSizeMode,
       exifSeparator,
+      exifDisplayStyle,
+      exifBgColor,
+      exifBgOpacity,
+      exifBgOpacityVal,
+      exifTextColor,
       exifFontSize,
       exifPadding,
       applyExif,
       ...document.querySelectorAll(".unit-btn"),
       ...document.querySelectorAll(".exif-tab-btn"),
+      exifAlignment,
+      exifInset,
+      exifBorderAlign,
     ];
     elementsToToggle.forEach((el) => {
       if (el) el.disabled = !on;
@@ -178,6 +195,28 @@
       right: Math.max(0, pxR),
       bottom: Math.max(0, pxB),
       left: Math.max(0, pxL),
+    };
+  }
+
+  // --- Consistent border-width calculator (uses original image as reference) ---
+  function getBorderWidthsPx(op) {
+    if (!op || !originalImg) return { top: 0, right: 0, bottom: 0, left: 0 };
+    const parse = v => parseInt(v, 10) || 0;
+
+    if (op.unit === '%') {                 // percentage → px
+      return {
+        top:    Math.round((parse(op.widthT) / 100) * originalImg.height),
+        right:  Math.round((parse(op.widthR) / 100) * originalImg.width),
+        bottom: Math.round((parse(op.widthB) / 100) * originalImg.height),
+        left:   Math.round((parse(op.widthL) / 100) * originalImg.width),
+      };
+    }
+    // already px
+    return {
+      top:    parse(op.widthT),
+      right:  parse(op.widthR),
+      bottom: parse(op.widthB),
+      left:   parse(op.widthL),
     };
   }
 
@@ -490,6 +529,11 @@
     ops.push(op);
     render(ops);
     undoBtn.disabled = ops.length === 0;
+    
+    // Update inset if border alignment is checked
+    if (exifBorderAlign && exifBorderAlign.checked) {
+      updateInsetFromBorders();
+    }
   }
   applyInner.addEventListener("click", () => applyBorder("inner"));
   applyOuter.addEventListener("click", () => applyBorder("outer"));
@@ -528,13 +572,28 @@
   function updateInnerPreview() {
     if (!originalImg) return;
     const op = getPreviewOp("inner");
-    if (op) scheduleRender(op);
+    if (op) {
+      scheduleRender(op);
+      
+      // Update inset if border alignment is checked
+      if (exifBorderAlign && exifBorderAlign.checked) {
+        updateInsetFromBorders();
+      }
+    }
   }
+  
   // Trigger a debounced preview render for the outer border settings.
   function updateOuterPreview() {
     if (!originalImg) return;
     const op = getPreviewOp("outer");
-    if (op) scheduleRender(op);
+    if (op) {
+      scheduleRender(op);
+      
+      // Update inset if border alignment is checked
+      if (exifBorderAlign && exifBorderAlign.checked) {
+        updateInsetFromBorders();
+      }
+    }
   }
 
   // Inner Border: Sync simple slider/input and update preview.
@@ -882,12 +941,15 @@
       location: exifLocation.value,
       copyright: copyright,
       position: exifPosition.value,
+      alignment: exifAlignment.value, 
+      borderAlign: exifBorderAlign.checked,
+      inset: parseFloat(exifInset.value),
       sizeMode: exifSizeMode.value,
-      displayStyle: 'classic', // Always use classic style
+      displayStyle: exifDisplayStyle.value,
       separator: separator,
-      bgColor: '#000000', // Black background
-      bgOpacity: 0.85, // Standard opacity
-      textColor: '#FFFFFF', // White text
+      bgColor: exifBgColor.value,
+      bgOpacity: parseInt(exifBgOpacity.value, 10) / 100,
+      textColor: exifTextColor.value,
       fontSize: parseInt(exifFontSize.value, 10),
       padding: parseInt(exifPadding.value, 10)
     };
@@ -896,7 +958,7 @@
   // Calculate a responsive font size based on the image dimensions
   function calculateResponsiveFontSize(imageWidth, imageHeight, baseFontSize) {
     const minSize = 14;
-    const maxSize = 40;
+    const maxSize = 200;
     
     // If fixed size is requested, use the base font size but still enforce min/max
     if (exifSizeMode && exifSizeMode.value === 'fixed') {
@@ -956,72 +1018,132 @@
     const lineHeight = fontSize * 1.5;
     const textHeight = lineHeight;
     
-    // Calculate overlay dimensions
-    const basePadding = op.padding || 20;
-    let paddingX = basePadding;
-    let paddingY = basePadding;
-    const overlayHeight = textHeight + (paddingY * 2);
+    // Get padding and inset values
+    const padding = op.padding || 20;
+    const inset = op.inset || 0;
     
-    // Set position based on user selection
+    // Save the current canvas state
+    ctx.save();
+    
+    // Get style options
     const position = op.position || 'bottom';
-    let overlayX = 0;
-    let overlayY = 0;
+    const alignment = op.alignment || 'left';
+    const borderAlign = op.borderAlign || false;
+    
+    // Get colors for styling
+    const bgColor = op.bgColor || '#000000';
+    const bgOpacity = op.bgOpacity !== undefined ? op.bgOpacity : 0.85;
+    const textColor = op.textColor || '#FFFFFF';
+    
+    // Convert hex to RGB for opacity control
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : {r: 0, g: 0, b: 0};
+    };
+    
+    const rgb = hexToRgb(bgColor);
+    
+    // --- Determine real borders + ratio padding ---
+    const lastInner = ops.filter(o => o.type === 'inner').pop();
+    const lastOuter = ops.filter(o => o.type === 'outer').pop();
+
+    const innerB = getBorderWidthsPx(lastInner);
+    const outerB = getBorderWidthsPx(lastOuter);
+
+    // extra padding introduced by aspect-ratio letter-boxing (outer border only)
+    let padH = 0, padV = 0;
+    if (lastOuter && lastOuter.ratio && lastOuter.ratio !== 'orig') {
+      const [rw, rh] = lastOuter.ratio.split(':').map(Number);
+      const borderedW = originalImg.width  + innerB.left + innerB.right + outerB.left + outerB.right;
+      const borderedH = originalImg.height + innerB.top  + innerB.bottom + outerB.top  + outerB.bottom;
+      const k = Math.max(borderedW / rw, borderedH / rh);
+
+      padH = Math.round((rw * k - borderedW) / 2);
+      padV = Math.round((rh * k - borderedH) / 2);
+    }
+
+    // final offsets from canvas edge to naked image
+    const totalLeft   = innerB.left + outerB.left + padH;
+    const totalRight  = innerB.right + outerB.right + padH;
+    const totalTop    = innerB.top  + outerB.top  + padV;
+    const totalBottom = innerB.bottom+outerB.bottom+padV;
+
+    // content box (actual photo without any border/padding)
+    const contentW = canvas.width  - totalLeft - totalRight;
+    const contentH = canvas.height - totalTop  - totalBottom;
+    const contentX = totalLeft;
+    const contentY = totalTop;
+    
+    // Calculate overlay dimensions and position
+    let overlayHeight = textHeight + (padding * 2);
+    
+    // Classic bar ALWAYS spans full canvas width regardless of alignment
     let overlayWidth = canvas.width;
+    let overlayX = 0;
     
-    // Apply different positioning for corner positions
-    const isCornerPosition = ['bottomRight', 'topLeft'].includes(position);
-    
-    if (isCornerPosition) {
-      // For corner positions, calculate a smaller width based on text
-      overlayWidth = Math.min(textWidth + (paddingX * 2), canvas.width * 0.5);
+    // Set Y position based on position selection - ALWAYS outside the image
+    let overlayY;
+    if (position === 'top') {
+      // Position above the image
+      overlayY = 0;
+    } else { // bottom
+      // Position below the image
+      overlayY = canvas.height - overlayHeight;
     }
     
-    switch (position) {
-      case 'top':
-        overlayY = 0;
-        break;
-      case 'bottom':
-        overlayY = canvas.height - overlayHeight;
-        break;
-      case 'topLeft':
-        overlayY = 0;
-        break;
-      case 'bottomRight':
-        overlayY = canvas.height - overlayHeight;
-        overlayX = canvas.width - overlayWidth;
-        break;
-      default:
-        overlayY = canvas.height - overlayHeight;
-    }
-    
-    // Apply the classic black bar style
-    ctx.save(); // Save the current state
-    
-    // Black background with standard opacity
-    ctx.fillStyle = `rgba(0, 0, 0, 0.85)`;
+    // Draw background
+    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${bgOpacity})`;
     ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
     
-    // Add thin white top border
+    // Add thin highlight line for style
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.fillRect(overlayX, overlayY, overlayWidth, 1);
-    
-    // Draw text
-    ctx.fillStyle = '#FFFFFF'; // White text
-    ctx.textBaseline = 'middle';
-    
-    // Single line with truncation if needed
-    const textY = overlayY + (overlayHeight / 2);
-    
-    // Check if the text is too long for the canvas
-    if (textWidth + (paddingX * 2) > overlayWidth) {
-      // Text is too long, need to truncate
-      const maxWidth = overlayWidth - (paddingX * 2);
-      ctx.fillText(exifText, overlayX + paddingX, textY, maxWidth);
+    if (position === 'top') {
+      ctx.fillRect(overlayX, overlayY + overlayHeight - 1, overlayWidth, 1);
     } else {
-      ctx.fillText(exifText, overlayX + paddingX, textY);
+      ctx.fillRect(overlayX, overlayY, overlayWidth, 1);
     }
     
-    ctx.restore(); // Restore the original state
+    // Set text baseline and color
+    ctx.fillStyle = textColor;
+    ctx.textBaseline = 'middle';
+    
+    // Apply the inset as percentage of image width, not the overlay width
+    const effectiveImageWidth = borderAlign ? contentW : canvas.width;
+    
+    // Calculate the pixel offset based on alignment and inset percentage
+    let insetPx = 0;
+    if (effectiveImageWidth > 0) { // Avoid division by zero
+      let effectiveInset = inset;
+      
+      // Convert from percentage to pixels (of image width, not overlay width)
+      insetPx = Math.max(0, (effectiveInset / 100) * effectiveImageWidth);
+    }
+    
+    // Apply inset based on alignment
+    let textX;
+    if (alignment === 'left') {
+      ctx.textAlign = 'left';
+      textX = overlayX + padding + insetPx;
+    } else if (alignment === 'right') {
+      ctx.textAlign = 'right';
+      textX = overlayX + overlayWidth - padding - insetPx;
+    } else { // center - no inset for center alignment
+      ctx.textAlign = 'center';
+      textX = overlayX + (overlayWidth / 2);
+    }
+    
+    const textY = overlayY + (overlayHeight / 2);
+    
+    // Draw text with proper max width (accounting for inset)
+    const maxTextWidth = overlayWidth - (padding * 2) - (2 * insetPx);
+    ctx.fillText(exifText, textX, textY, Math.max(0, maxTextWidth));
+    
+    // Restore canvas state
+    ctx.restore();
   }
   
   // Format camera settings in a nice way
@@ -1105,6 +1227,75 @@
     updateExifPreview();
   });
   
+  // Update preview when display style changes
+  exifDisplayStyle.addEventListener("change", updateExifPreview);
+  
+  // Update preview when background color changes
+  exifBgColor.addEventListener("input", updateExifPreview);
+  
+  // Update preview when background opacity changes
+  exifBgOpacity.addEventListener("input", () => {
+    exifBgOpacityVal.textContent = `${exifBgOpacity.value}%`;
+    updateExifPreview();
+  });
+  
+  // Update preview when text color changes
+  exifTextColor.addEventListener("input", updateExifPreview);
+  
+  // Update preview when alignment changes
+  exifAlignment.addEventListener("change", () => {
+    if (exifBorderAlign.checked) updateInsetFromBorders();
+    updateExifPreview();
+  });
+  
+  // Update preview when border alignment toggle changes
+  exifBorderAlign.addEventListener("change", () => {
+    if (exifBorderAlign.checked && originalImg) {
+      // Calculate border percentages based on current border widths
+      updateInsetFromBorders();
+    }
+    updateExifPreview();
+  });
+  
+  // Function to update inset value based on border widths
+  function updateInsetFromBorders() {
+    if (!originalImg) return;
+
+    const lastInner = ops.filter(o => o.type === 'inner').pop();
+    const lastOuter = ops.filter(o => o.type === 'outer').pop();
+
+    const innerB = getBorderWidthsPx(lastInner);
+    const outerB = getBorderWidthsPx(lastOuter);
+
+    // ratio padding (same math as above, horizontal only for inset)
+    let padH = 0;
+    if (lastOuter && lastOuter.ratio && lastOuter.ratio !== 'orig') {
+      const [rw, rh] = lastOuter.ratio.split(':').map(Number);
+      const borderedW = originalImg.width  + innerB.left + innerB.right + outerB.left + outerB.right;
+      const borderedH = originalImg.height + innerB.top  + innerB.bottom + outerB.top  + outerB.bottom;
+      const k = Math.max(borderedW / rw, borderedH / rh);
+      padH = Math.round((rw * k - borderedW) / 2);
+    }
+
+    const totalLeft  = innerB.left  + outerB.left  + padH;
+    const totalRight = innerB.right + outerB.right + padH;
+
+    const imgW = originalImg.width;                // width **without** borders
+    const alignRight = exifAlignment.value === 'right';
+    const relBorder = alignRight ? totalRight : totalLeft;
+
+    const insetPct = Math.min(100, Math.max(0, (relBorder / imgW) * 100));
+
+    exifInset.value = insetPct.toFixed(1);
+    exifInsetVal.textContent = `${exifInset.value}%`;
+  }
+  
+  // Update preview when inset value changes
+  exifInset.addEventListener("input", () => {
+    exifInsetVal.textContent = `${exifInset.value}%`;
+    updateExifPreview();
+  });
+  
   // Update preview when any EXIF form field changes
   [
     exifDate, exifTime, exifCamera, exifAperture, exifShutter, exifShutterSeconds, exifISO, exifLocation, 
@@ -1159,6 +1350,48 @@
   
   // Initialize manual size controls visibility
   toggleManualSizeControls();
+  
+  // Reset EXIF UI to defaults
+  function resetExifUI() {
+    if (exifDate) exifDate.value = new Date().toISOString().split('T')[0];
+    if (exifTime) exifTime.value = "12:00";
+    if (exifCamera) exifCamera.value = "";
+    if (exifAperture) exifAperture.value = "";
+    if (exifShutter) exifShutter.value = "";
+    if (exifShutterSeconds) exifShutterSeconds.value = "";
+    if (exifISO) exifISO.value = "";
+    if (exifLocation) exifLocation.value = "";
+    if (exifCopyright) exifCopyright.value = "";
+    if (exifPosition) exifPosition.value = "bottom";
+    if (exifAlignment) exifAlignment.value = "left";
+    if (exifBorderAlign) exifBorderAlign.checked = false;
+    if (exifInset) {
+      exifInset.value = "0";
+      if (exifInsetVal) exifInsetVal.textContent = "0%";
+    }
+    if (exifSizeMode) exifSizeMode.value = "responsive";
+    if (exifDisplayStyle) exifDisplayStyle.value = "classic";
+    if (exifSeparator) exifSeparator.value = " | ";
+    if (exifBgColor) exifBgColor.value = "#000000";
+    if (exifBgOpacity) {
+      exifBgOpacity.value = "85";
+      if (exifBgOpacityVal) exifBgOpacityVal.textContent = "85%";
+    }
+    if (exifTextColor) exifTextColor.value = "#FFFFFF";
+    if (exifFontSize) {
+      exifFontSize.value = "20";
+      if (exifFontSizeVal) exifFontSizeVal.textContent = "20px";
+    }
+    if (exifPadding) {
+      exifPadding.value = "20";
+      if (exifPaddingVal) exifPaddingVal.textContent = "20px";
+    }
+    
+    // Reset visibility states
+    toggleManualSizeControls();
+    toggleTimeFieldVisibility();
+    toggleShutterInputType();
+  }
 })();
 
 // Tab switching functionality for EXIF panel
